@@ -909,18 +909,27 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);			
   const [editGoal, setEditGoal] = useState(null);			
   const [suggestFor, setSuggestFor] = useState(null);			
-  // ── Auth listener + handle redirect result ──			
-  useEffect(() => {			
-    // Handle redirect result when user comes back from Google			
-    getRedirectResult(auth).then(result => {			
-      if (result?.user) setUser(result.user);			
-    }).catch(e => console.error("Redirect error:", e));			
-    const unsub = onAuthStateChanged(auth, u => {			
-      setUser(u);			
-      setAuthLoading(false);			
-    });			
-    return unsub;			
-  }, []);			
+// ── Auth listener + redirect result ──	
+useEffect(() => {	
+  const unsub = onAuthStateChanged(auth, async (u) => {	
+    if (u) {	
+      setUser(u);	
+      setAuthLoading(false);	
+      return;	
+    }	
+    // Check if we're returning from a redirect	
+    try {	
+      const result = await getRedirectResult(auth);	
+      if (result?.user) {	
+        setUser(result.user);	
+      }	
+    } catch (e) {	
+      console.error("Redirect result error:", e);	
+    }	
+    setAuthLoading(false);	
+  });	
+  return unsub;	
+}, []);	
   // ── Firestore listeners — real-time sync ──			
   useEffect(() => {			
     if (!user) return;			
@@ -1021,9 +1030,9 @@ export default function App() {
   const addHabits = (newHabits) => {			
     newHabits.forEach(h => saveHabit(h));			
   };			
-  const handleLogin = () => {			
-    signInWithPopup(auth, googleProvider).then(result => setUser(result.user)).catch(e => console.error(e));		
-  };			
+const handleLogin = () => {	
+  signInWithRedirect(auth, googleProvider);	
+};	
   const handleDemo = () => setDemoMode(true);			
   const handleLogout = () => { signOut(auth); setDemoMode(false); };			
   const greet = () => { const h=new Date().getHours(); return h<12?"Good morning":h<17?"Good afternoon":"Good evening"; };			
