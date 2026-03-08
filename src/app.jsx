@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";				
 import { db, auth, googleProvider } from "./firebase.js";				
 import { collection, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";				
-import { signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";				
+import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";				
 // ─── THEME ────────────────────────────────────────────────────────────────────				
 const T = {				
   bg: "#07080C", surface: "#0E1018", card: "#13151E", border: "rgba(255,255,255,0.07)",				
