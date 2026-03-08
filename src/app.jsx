@@ -1021,10 +1021,10 @@ export default function App() {
   const addHabits = (newHabits) => {			
     newHabits.forEach(h => saveHabit(h));			
   };			
-  const handleLogin = async () => {			
-    setLoginLoading(true);			
-    try { await signInWithRedirect(auth, googleProvider); }			
-    catch(e) { console.error(e); setLoginLoading(false); }			
+  const handleLogin = () => {			
+    signInWithPopup(auth, googleProvider);			
+      .then(result => setUser(result.user))
+      .catch(e => console.error(e));		
   };			
   const handleDemo = () => setDemoMode(true);			
   const handleLogout = () => { signOut(auth); setDemoMode(false); };			
