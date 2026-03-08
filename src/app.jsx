@@ -739,7 +739,7 @@ function HabitSuggester({ goal, existingHabits, onAdd, onClose }) {
   const [error, setError] = useState("");		
   const cat = CATS.find(c => c.id === goal.category) || CATS[0];		
   useEffect(() => {		
-    const unsub = onAuthStateChanged(auth, () => {		
+    const fetch_ = async () => {
       const existingLabels = existingHabits.map(h => h.label).join(", ");		
       const prompt = `You are a habit coach. A user just created this goal:		
 Title: ${goal.title}		
