@@ -2,7 +2,7 @@
 
 import { initializeApp } from "firebase/app";	
 import { getFirestore } from "firebase/firestore";	
-import { getAuth, GoogleAuthProvider, browserLocalPersistence, setPersistence } from "firebase/auth";	
+import { getAuth, GoogleAuthProvider} from "firebase/auth";	
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -14,8 +14,7 @@ const firebaseConfig = {
   projectId: "life-dashboard-e8a35",	
   storageBucket: "life-dashboard-e8a35.firebasestorage.app",	
   messagingSenderId: "36128445674",	
-  appId: "1:36128445674:web:a8dac0aa49b424ca8cf393",	
-  measurementId: "G-K3DRCXXYXW"	
+  appId: "1:36128445674:web:a8dac0aa49b424ca8cf393"	
 };	
 
 // Initialize Firebase
@@ -24,4 +23,3 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);	
 export const googleProvider = new GoogleAuthProvider();	
 googleProvider.setCustomParameters({ prompt: "select_account" });	
-setPersistence(auth, browserLocalPersistence);	
