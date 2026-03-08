@@ -7,6 +7,7 @@ A personal goal tracking, habit management, and analytics dashboard built with R
 - Daily habit tracker with streak tracking
 - Analytics page with AI-generated insights
 - AI Habit Suggester — auto-suggests habits when a new goal is created
+- AI SMART Goal Coach
  
 ## Dev Setup
 ```bash
