@@ -1022,9 +1022,7 @@ export default function App() {
     newHabits.forEach(h => saveHabit(h));			
   };			
   const handleLogin = () => {			
-    signInWithPopup(auth, googleProvider);			
-      .then(result => setUser(result.user))
-      .catch(e => console.error(e));		
+    signInWithPopup(auth, googleProvider).then(result => setUser(result.user)).catch(e => console.error(e));		
   };			
   const handleDemo = () => setDemoMode(true);			
   const handleLogout = () => { signOut(auth); setDemoMode(false); };			
