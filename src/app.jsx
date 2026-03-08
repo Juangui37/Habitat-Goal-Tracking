@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";		
 import { db, auth, googleProvider } from "./firebase.js";		
 import { collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "firebase/firestore";		
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";		
+import { signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";		
 // ─── THEME ────────────────────────────────────────────────────────────────────		
 const T = {		
   bg: "#07080C", surface: "#0E1018", card: "#13151E", border: "rgba(255,255,255,0.07)",		
@@ -739,7 +739,7 @@ function HabitSuggester({ goal, existingHabits, onAdd, onClose }) {
   const [error, setError] = useState("");		
   const cat = CATS.find(c => c.id === goal.category) || CATS[0];		
   useEffect(() => {		
-    const fetch_ = async () => {		
+    const unsub = onAuthStateChanged(auth, () => {		
       const existingLabels = existingHabits.map(h => h.label).join(", ");		
       const prompt = `You are a habit coach. A user just created this goal:		
 Title: ${goal.title}		
@@ -1018,9 +1018,7 @@ export default function App() {
     newHabits.forEach(h => saveHabit(h));		
   };		
   const handleLogin = () => {		
-    signInWithPopup(auth, googleProvider)		
-      .then(result => { setUser(result.user); })		
-      .catch(e => { console.error("Login error:", e); });		
+    signInWithRedirect(auth, googleProvider);			
   };		
   const handleDemo = () => setDemoMode(true);		
   const handleLogout = () => { signOut(auth); setDemoMode(false); };		
