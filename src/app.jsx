@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";				
 import { db, auth, googleProvider } from "./firebase.js";				
 import { collection, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";				
-import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";				
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";				
 // ─── THEME ────────────────────────────────────────────────────────────────────				
 const T = {				
   bg: "#07080C", surface: "#0E1018", card: "#13151E", border: "rgba(255,255,255,0.07)",				
@@ -911,25 +911,13 @@ export default function App() {
   const [editGoal, setEditGoal] = useState(null);				
   const [suggestFor, setSuggestFor] = useState(null);				
   // ── Auth listener + redirect result ──				
-  useEffect(() => {				
-    // Check if returning from Google redirect				
-    getRedirectResult(auth)				
-      .then((result) => {				
-        if (result && result.user) {				
-          setUser(result.user);				
-          setAuthLoading(false);				
-        }				
-      })				
-      .catch((err) => {				
-        console.error("redirect result error:", err);				
-      });				
-    // Listen for auth state changes				
-    const unsub = onAuthStateChanged(auth, (u) => {				
-      setUser(u);				
-      setAuthLoading(false);				
-    });				
-    return unsub;				
-  }, []);				
+useEffect(() => {
+  const unsub = onAuthStateChanged(auth, (u) => {
+    setUser(u);
+    setAuthLoading(false);
+  });
+  return unsub;
+}, []);			
   // ── Firestore listeners — real-time sync ──				
   useEffect(() => {				
     if (!user) return;				
@@ -1017,9 +1005,16 @@ export default function App() {
   const addHabits = (newHabits) => {				
     newHabits.forEach(h => saveHabit(h));				
   };				
-  const handleLogin = () => {				
-    signInWithRedirect(auth, googleProvider);				
-  };				
+  const handleLogin = async () => {
+    setLoginLoading(true);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      console.error("Login error:", err);
+    } finally {
+      setLoginLoading(false);
+    }
+  };			
   const handleDemo = () => {				
     setDemoMode(true);				
     setGoals(SEED_GOALS);				
