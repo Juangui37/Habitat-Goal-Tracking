@@ -1,25 +1,81 @@
-import { useState, useEffect, useRef, useCallback } from "react";				
-import { db, auth, googleProvider } from "./firebase.js";				
-import { collection, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";				
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-// ─── THEME ────────────────────────────────────────────────────────────────────				
-const T = {				
-  bg: "#07080C", surface: "#0E1018", card: "#13151E", border: "rgba(255,255,255,0.07)",				
-  text: "#F0F0F8", muted: "rgba(255,255,255,0.38)", faint: "rgba(255,255,255,0.12)",				
-};				
-// ─── CATEGORIES ───────────────────────────────────────────────────────────────				
-const CATS = [				
-  { id:"physical",  label:"Physical",  icon:"⚡", color:"#E8645A" },				
-  { id:"financial", label:"Financial", icon:"◈",  color:"#4CAF82" },				
-  { id:"religious", label:"Religious", icon:"✦",  color:"#C8A96E" },				
-  { id:"parenting", label:"Parenting", icon:"❋",  color:"#7EB8D4" },				
-  { id:"career",    label:"Career",    icon:"▲",  color:"#9B8FE8" },				
-  { id:"lifestyle", label:"Lifestyle", icon:"◎",  color:"#E8A45A" },				
-  { id:"emotional", label:"Emotional", icon:"◐",  color:"#E87AAF" },				
-  { id:"travel",    label:"Travel",    icon:"⊕",  color:"#5AC8C8" },				
-];				
-// ─── SEED GOALS (14 total) ────────────────────────────────────────────────────				
-// ─── DEMO HABIT LOG GENERATOR ─────────────────────────────────────────────────
+import { useState, useEffect, useRef, useCallback } from "react";
+import { db, auth, googleProvider } from "./firebase.js";
+import { collection, doc, setDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+
+const APP_NAME = "Lumina";
+const APP_TAGLINE = "your life, illuminated";
+
+const DARK_THEME = {
+  bg: "#07080C", surface: "#0E1018", card: "#13151E", border: "rgba(255,255,255,0.07)",
+  text: "#F0F0F8", muted: "rgba(255,255,255,0.38)", faint: "rgba(255,255,255,0.12)",
+  inputBg: "rgba(255,255,255,0.05)", isDark: true,
+};
+const LIGHT_THEME = {
+  bg: "#F4F5F8", surface: "#FFFFFF", card: "#FFFFFF", border: "rgba(0,0,0,0.08)",
+  text: "#0E1018", muted: "rgba(0,0,0,0.45)", faint: "rgba(0,0,0,0.1)",
+  inputBg: "rgba(0,0,0,0.04)", isDark: false,
+};
+let T = DARK_THEME;
+
+const CATS = [
+  { id:"physical",  label:"Physical",   icon:"⚡", color:"#E8645A" },
+  { id:"financial", label:"Financial",  icon:"◈",  color:"#4CAF82" },
+  { id:"religious", label:"Religious",  icon:"✦",  color:"#C8A96E" },
+  { id:"parenting", label:"Parenting",  icon:"❋",  color:"#7EB8D4" },
+  { id:"career",    label:"Career",     icon:"▲",  color:"#9B8FE8" },
+  { id:"lifestyle", label:"Lifestyle",  icon:"◎",  color:"#E8A45A" },
+  { id:"emotional", label:"Emotional",  icon:"◐",  color:"#E87AAF" },
+  { id:"travel",    label:"Travel",     icon:"⊕",  color:"#5AC8C8" },
+  { id:"health",    label:"Health",     icon:"♥",  color:"#E8645A" },
+  { id:"social",    label:"Social",     icon:"❤",  color:"#E87AAF" },
+];
+
+const HAB_CATS = [
+  { id:"morning",     label:"Morning Routine", color:"#C8A96E", icon:"☀️" },
+  { id:"night",       label:"Night Routine",   color:"#9B8FE8", icon:"🌙" },
+  { id:"fitness",     label:"Fitness",         color:"#E8645A", icon:"⚡" },
+  { id:"nutrition",   label:"Nutrition",       color:"#4CAF82", icon:"🥗" },
+  { id:"mindfulness", label:"Mindfulness",     color:"#7EB8D4", icon:"🧘" },
+  { id:"learning",    label:"Learning",        color:"#E8A45A", icon:"📚" },
+  { id:"social",      label:"Social",          color:"#E87AAF", icon:"💬" },
+  { id:"finances",    label:"Finances",        color:"#4CAF82", icon:"💰" },
+];
+
+const PRESET_HABITS = {
+  morning:     [{ label:"Make bed immediately", icon:"🛏️" },{ label:"10 min morning walk", icon:"🌅" },{ label:"Cold shower", icon:"🚿" },{ label:"No-phone morning block", icon:"📵" },{ label:"Review goals for the day", icon:"◎" },{ label:"Morning journaling (5 min)", icon:"📓" },{ label:"Drink 500ml water on waking", icon:"💧" },{ label:"Sunlight exposure within 1hr", icon:"☀️" }],
+  night:       [{ label:"No screens after 10pm", icon:"🌙" },{ label:"Brush & floss teeth", icon:"🦷" },{ label:"Read 20 minutes", icon:"📖" },{ label:"Journal — 3 things grateful", icon:"✦" },{ label:"In bed by 10:30pm", icon:"💤" },{ label:"Plan tomorrow (2 min)", icon:"📋" },{ label:"Skincare routine", icon:"✨" },{ label:"Put clothes out for tomorrow", icon:"👔" }],
+  fitness:     [{ label:"Complete planned workout", icon:"⚡" },{ label:"Running session", icon:"🏃" },{ label:"10 min stretching", icon:"🧘" },{ label:"Step count 8,000+", icon:"👟" },{ label:"Swim session", icon:"🏊" },{ label:"Cycling workout", icon:"🚴" },{ label:"Active recovery walk", icon:"🚶" },{ label:"Track lifts in app", icon:"📊" }],
+  nutrition:   [{ label:"Eat a high-protein breakfast", icon:"🥚" },{ label:"Drink 2.5L+ water", icon:"💧" },{ label:"No alcohol on weekdays", icon:"🚫" },{ label:"Log meals (MyFitnessPal)", icon:"📱" },{ label:"Meal prepped this week", icon:"🍱" },{ label:"Hit protein target", icon:"🥩" },{ label:"No processed food today", icon:"🥦" },{ label:"Take supplements", icon:"💊" }],
+  mindfulness: [{ label:"Meditate 10 minutes", icon:"🧘" },{ label:"Breathing exercise", icon:"🌬️" },{ label:"Gratitude entry (3 things)", icon:"💛" },{ label:"Screen-free hour", icon:"📵" },{ label:"Therapy session", icon:"💬" },{ label:"Spend time in nature", icon:"🌿" },{ label:"Digital detox after 9pm", icon:"🌙" },{ label:"Affirmations / visualization", icon:"✦" }],
+  learning:    [{ label:"Read 20 min non-fiction", icon:"📚" },{ label:"Watch 1 educational video", icon:"🎓" },{ label:"Practice a language", icon:"🌍" },{ label:"Review flashcards", icon:"🃏" },{ label:"Work on side project", icon:"💻" },{ label:"Write something", icon:"✍️" },{ label:"Listen to a podcast", icon:"🎧" },{ label:"Practice an instrument", icon:"🎵" }],
+  social:      [{ label:"Reach out to a friend", icon:"📞" },{ label:"Quality time with loved ones", icon:"❤️" },{ label:"Send an encouraging message", icon:"💌" },{ label:"Social media max 30 min", icon:"📱" },{ label:"1:1 with a mentor", icon:"🤝" },{ label:"No complaining today", icon:"🙅" },{ label:"Random act of kindness", icon:"🌟" },{ label:"Attend a community event", icon:"🏘️" }],
+  finances:    [{ label:"Review daily spending", icon:"💳" },{ label:"Log expenses in budget app", icon:"📊" },{ label:"No impulse purchases", icon:"🛑" },{ label:"Check investment accounts", icon:"📈" },{ label:"Pack lunch (save money)", icon:"🥪" },{ label:"Transfer to savings", icon:"🏦" },{ label:"Review weekly budget", icon:"📋" },{ label:"Read 15 min finance content", icon:"💰" }],
+};
+
+const DAY_SCHEDULES = [
+  { id:"daily",    label:"Every day",   short:"Daily",  days:[0,1,2,3,4,5,6] },
+  { id:"weekdays", label:"Weekdays",    short:"M–F",    days:[1,2,3,4,5] },
+  { id:"weekends", label:"Weekends",    short:"Sat/Sun",days:[0,6] },
+  { id:"custom",   label:"Custom days", short:"Custom", days:[] },
+];
+const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+const todayStr = () => new Date().toISOString().split("T")[0];
+const calcProgress = g => { const t=g.subtasks.length,d=g.subtasks.filter(s=>s.done).length; return t>0?Math.round(d/t*100):0; };
+const daysLeft = tb => tb ? Math.ceil((new Date(tb)-new Date())/86400000) : null;
+const fmtDate = d => new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+
+function callClaude(prompt, systemPrompt, maxTokens=600) {
+  return fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens: maxTokens,
+      ...(systemPrompt ? {system: systemPrompt} : {}),
+      messages:[{role:"user", content:prompt}]
+    })
+  }).then(r=>r.json()).then(d=>d.content?.map(b=>b.text||"").join("")||"");
+}
+
 function generateDemoLogs(habits) {
   const logs = {};
   const today = new Date();
@@ -46,6 +102,36 @@ function generateDemoLogs(habits) {
   }
   return logs;
 }
+
+
+const mkDate = (daysAgo) => { const d = new Date(); d.setDate(d.getDate()-daysAgo); return d.toISOString().split("T")[0]; };
+
+
+const SEED_REMINDERS = [
+  { id:"r1", text:"Open a brokerage account on Fidelity", done:false, createdAt:mkDate(30), dueDate:mkDate(-7), category:"financial", aiNote:"Linked to your financial goals around investing." },
+  { id:"r2", text:"Schedule dentist appointment", done:true, createdAt:mkDate(25), dueDate:mkDate(5), category:"health", aiNote:"Part of maintaining your physical health." },
+  { id:"r3", text:"Research CrossFit Level 1 certification dates", done:false, createdAt:mkDate(20), dueDate:mkDate(-14), category:"career", aiNote:"Connects to your personal training business goal." },
+  { id:"r4", text:"Set up automatic $900/month savings transfer", done:true, createdAt:mkDate(18), dueDate:mkDate(10), category:"financial", aiNote:"Directly supports your emergency fund goal." },
+  { id:"r5", text:"Call mom and catch up", done:false, createdAt:mkDate(14), dueDate:mkDate(1), category:"social", aiNote:"Nurturing important relationships." },
+  { id:"r6", text:"Register for fall half marathon", done:false, createdAt:mkDate(10), dueDate:mkDate(-3), category:"physical", aiNote:"Aligns with your running performance goals." },
+  { id:"r7", text:"Write a LinkedIn post about my API migration project", done:false, createdAt:mkDate(7), dueDate:mkDate(2), category:"career", aiNote:"Builds visibility for your promotion goal." },
+  { id:"r8", text:"Book therapy appointment for next week", done:true, createdAt:mkDate(5), dueDate:mkDate(3), category:"emotional", aiNote:"Supporting your emotional regulation goal." },
+  { id:"r9", text:"Look into Portugal flights for November", done:false, createdAt:mkDate(3), dueDate:mkDate(10), category:"travel", aiNote:"Related to your solo international travel goal." },
+  { id:"r10", text:"Review monthly budget — March spending", done:false, createdAt:mkDate(1), dueDate:mkDate(0), category:"financial", aiNote:"Part of your debt elimination strategy." },
+];
+
+
+const SEED_DIARY = [
+  { id:"d1", text:"Had an incredible long run today — 10 miles, negative splits the whole way. Six months ago I couldn't sustain this pace for 3 miles. The marathon training is working. My legs are sore but my mind is clear in a way that only running gives me. I've been thinking a lot about what it means to be consistent vs. being motivated. Motivation fades. Consistency is the whole game.", categories:["physical","emotional"], mood:"great", wordCount:78, createdAt:mkDate(45)+"T09:00:00.000Z" },
+  { id:"d2", text:"Therapy session today hit different. We talked about how I use achievement as armor — always chasing the next goal so I don't have to sit with the discomfort of the present. There's something real there. I genuinely love building and growing, but I need to make sure I'm also present. Sebastian asked me last night why I was on my phone during dinner. That one hurt.", categories:["emotional","parenting"], mood:"reflective", wordCount:82, createdAt:mkDate(38)+"T21:00:00.000Z" },
+  { id:"d3", text:"First paying client for the freelance work. $950 deposit hit my account today. I've built websites for people for free for three years. The number didn't change. The belief did. Charged what I was worth and they said yes without hesitation. The only thing that was ever in the way was me.", categories:["career","financial"], mood:"great", wordCount:55, createdAt:mkDate(30)+"T19:00:00.000Z" },
+  { id:"d4", text:"Rough week. Missed three workouts, blew my nutrition Thursday through Saturday, and spent way too much time doomscrolling. I'm not going to pretend it didn't happen or spin it into some lesson. Sometimes you just have an off week. The goal is to not let it become two.", categories:["physical","emotional"], mood:"low", wordCount:52, createdAt:mkDate(22)+"T22:00:00.000Z" },
+  { id:"d5", text:"Read The Psychology of Money cover to cover this weekend. The concept of 'reasonable vs rational' is going to stick with me for a long time. Being financially reasonable — making decisions you can stick to — matters more than being theoretically optimal. Applied this to my savings plan immediately. Moved from trying to maximize returns to just automating consistency.", categories:["financial","lifestyle"], mood:"good", wordCount:68, createdAt:mkDate(16)+"T16:00:00.000Z" },
+  { id:"d6", text:"Sebastian and I went to the farmers market this morning. No phones. Just us. He held my hand and asked me what my favorite fruit was and we argued about it for twenty minutes. These are the moments I want to protect. Not the races or the PRs or the promotions. This.", categories:["parenting","emotional"], mood:"great", wordCount:56, createdAt:mkDate(10)+"T11:00:00.000Z" },
+  { id:"d7", text:"Manager pulled me aside after the sprint review today. Said my API migration work was 'exactly the kind of ownership we need at senior level.' Didn't know how to respond. Just said thank you. Later I thought: this is what happens when you stop waiting to be noticed and just do the work loudly on purpose.", categories:["career"], mood:"good", wordCount:58, createdAt:mkDate(6)+"T18:00:00.000Z" },
+  { id:"d8", text:"Something strange happened during my meditation today — for about 90 seconds I genuinely had no internal monologue. Just breath and quiet. I've been meditating on and off for two years and that's never happened. Maybe consistency is finally paying off in ways I can't track on a spreadsheet.", categories:["emotional","lifestyle"], mood:"good", wordCount:57, createdAt:mkDate(2)+"T08:30:00.000Z" },
+];
+
 const SEED_GOALS = [
   { id:"g1", category:"physical", priority:"High", title:"Run my first marathon under 4 hours",
     specific:"Complete a full 26.2 mile marathon in under 4 hours at the Chicago Marathon in October. Currently running half marathons in ~2:10.",
@@ -120,6 +206,7 @@ const SEED_GOALS = [
     subtasks:[{id:"g9s1",label:"Decide: Portugal vs Japan",done:false},{id:"g9s2",label:"Research visa requirements",done:false},{id:"g9s3",label:"Book flights (aim 3+ months out for price)",done:false},{id:"g9s4",label:"Book accommodations",done:false},{id:"g9s5",label:"Complete the trip",done:false}],
     journal:[], createdAt:"2026-02-01" },
 ];
+
 const SEED_HABITS = [
   { id:"dh1",  category:"morning",   label:"Make bed immediately after waking",  icon:"🛏", color:"#C8A96E" },
   { id:"dh2",  category:"morning",   label:"10 min morning walk outside",        icon:"🌅", color:"#E8A45A" },
@@ -397,6 +484,42 @@ function JournalPanel({ goal, onAddNote, onClose, catColor }) {
     </div>				
   );				
 }				
+
+// ─── PROGRESS RING ────────────────────────────────────────────────────────────				
+function Ring({ pct, color, size=52, strokeWidth=4 }) {				
+  const r=(size-strokeWidth*2)/2, circ=2*Math.PI*r, offset=circ-(pct/100)*circ;				
+  return (				
+    <svg width={size} height={size} style={{transform:"rotate(-90deg)",flexShrink:0}}>				
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth}/>				
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={strokeWidth}				
+        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"				
+        style={{transition:"stroke-dashoffset 0.7s ease"}}/>				
+    </svg>				
+  );				
+}				
+
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function Nav({ tab, setTab }) {
+  const tabs = [
+    { id:"goals",     icon:"◎", label:"Goals" },
+    { id:"habits",    icon:"✦", label:"Habits" },
+    { id:"reminders", icon:"🔔", label:"Reminders" },
+    { id:"diary",     icon:"📓", label:"Diary" },
+    { id:"analytics", icon:"▲", label:"Analytics" },
+  ];
+  return (
+    <div style={{display:"flex",gap:3,background:T.surface,borderRadius:14,padding:4,border:`1px solid ${T.border}`,overflowX:"auto"}}>
+      {tabs.map(t => (
+        <button key={t.id} onClick={()=>setTab(t.id)}
+          style={{flexShrink:0,padding:"8px 16px",borderRadius:11,border:"none",background:tab===t.id?"linear-gradient(135deg,#9B8FE8 0%,#7EB8D4 100%)":"transparent",color:tab===t.id?"#fff":T.muted,cursor:"pointer",fontWeight:700,fontSize:12,display:"flex",alignItems:"center",gap:6,transition:"all 0.2s",fontFamily:"inherit"}}>
+          <span>{t.icon}</span>{t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ─── GOAL CARD ────────────────────────────────────────────────────────────────				
 function GoalCard({ goal, onToggleSubtask, onDelete, onEdit, onAddNote }) {				
   const [expanded, setExpanded] = useState(false);				
@@ -519,6 +642,7 @@ function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJo
     </div>				
   );				
 }				
+
 // ─── HABITS PAGE ──────────────────────────────────────────────────────────────
 const DAY_SCHEDULES = [
   { id:"daily",    label:"Every day",    short:"Daily",    days:[0,1,2,3,4,5,6] },
@@ -830,6 +954,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
     </div>
   );
 }
+
 
 // ─── ANALYTICS PAGE ───────────────────────────────────────────────────────────
 function AnalyticsPage({ habits, habitLogs, goals }) {
@@ -1228,6 +1353,7 @@ function AnalyticsPage({ habits, habitLogs, goals }) {
   );
 }
 
+
 // ─── HABIT SUGGESTER ──────────────────────────────────────────────────────────				
 function HabitSuggester({ goal, existingHabits, onAdd, onClose }) {				
   const [suggestions, setSuggestions] = useState([]);				
@@ -1357,226 +1483,950 @@ Keep labels concise (under 40 chars).`;
     </div>				
   );				
 }				
-// ─── LOGIN SCREEN ─────────────────────────────────────────────────────────────				
-function LoginScreen({ onLogin, onDemo, loading }) {				
-  return (				
-    <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',system-ui,sans-serif"}}>				
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet"/>				
-      <div style={{textAlign:"center",padding:"0 24px",maxWidth:400,width:"100%"}}>				
-        <div style={{fontSize:52,marginBottom:16}}>◎</div>				
-        <h1 style={{fontSize:32,fontWeight:700,color:"#fff",letterSpacing:-1,marginBottom:8}}>				
-          Life <span style={{color:"rgba(255,255,255,0.3)",fontWeight:300,fontStyle:"italic"}}>Dashboard</span>				
-        </h1>				
-        <p style={{fontSize:14,color:T.muted,lineHeight:1.6,maxWidth:300,margin:"0 auto 36px"}}>				
-          Track your goals, build habits, and analyze your progress — all in one place.				
-        </p>				
-        {/* Google login */}				
-        <button onClick={onLogin} disabled={loading}				
-          style={{width:"100%",background:"#fff",border:"none",borderRadius:13,padding:"14px 24px",color:"#111",cursor:loading?"not-allowed":"pointer",fontWeight:700,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:12,opacity:loading?0.7:1,fontFamily:"inherit",boxShadow:"0 4px 24px rgba(255,255,255,0.08)",marginBottom:12}}>				
-          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>				
-          {loading ? "Redirecting to Google..." : "Continue with Google"}				
-        </button>				
-        {/* Demo mode */}				
-        <button onClick={onDemo}				
-          style={{width:"100%",background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.3)",borderRadius:13,padding:"14px 24px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:14,fontFamily:"inherit",marginBottom:24}}>				
-          👀 View Demo (no login)				
-        </button>				
-        <p style={{fontSize:11,color:"rgba(255,255,255,0.15)"}}>				
-          Google sign-in syncs your data across all devices. Demo mode uses sample data only.				
-        </p>				
-      </div>				
-    </div>				
-  );				
-}				
-// ─── ROOT APP ─────────────────────────────────────────────────────────────────				
-export default function App() {				
-  // ── Auth state ──				
-  const [user, setUser] = useState(null);				
-  const [authLoading, setAuthLoading] = useState(true);				
-  const [loginLoading, setLoginLoading] = useState(false);				
-  const [demoMode, setDemoMode] = useState(false);				
-  // ── Data state ──				
-  // demoMode uses SEED data, logged-in users get their own Firestore data				
-  const [goals, setGoals] = useState([]);				
-  const [habits, setHabits] = useState([]);				
-  const [habitLogs, setHabitLogs] = useState({});				
-  const [dataLoaded, setDataLoaded] = useState(false);				
-  // ── UI state ──				
-  const [tab, setTab] = useState("goals");				
-  const [showAI, setShowAI] = useState(false);				
-  const [showModal, setShowModal] = useState(false);				
-  const [editGoal, setEditGoal] = useState(null);				
-  const [suggestFor, setSuggestFor] = useState(null);				
+
+
+// ─── LOGIN SCREEN ─────────────────────────────────────────────────────────────
+function LoginScreen({ onGoogleLogin, onEmailLogin, onEmailSignup, loading, onDemo }) {
+  const [authMode, setAuthMode] = useState("options"); // options | email-login | email-signup
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleEmailSubmit = async () => {
+    if (!email.trim() || !password.trim()) { setError("Please fill in all fields."); return; }
+    setEmailLoading(true); setError("");
+    try {
+      if (authMode === "email-signup") {
+        await onEmailSignup(email, password, name);
+      } else {
+        await onEmailLogin(email, password);
+      }
+    } catch(e) {
+      setError(e.message?.replace("Firebase: ","").replace(/\(auth\/.*?\)/,"").trim() || "Something went wrong.");
+    }
+    setEmailLoading(false);
+  };
+
+  const handleReset = async () => {
+    if (!email.trim()) { setError("Enter your email address first."); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true); setError("");
+    } catch(e) { setError("Couldn't send reset email. Check the address."); }
+  };
+
+  const inp = {width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:11,padding:"13px 16px",color:T.text,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"inherit",marginBottom:10};
+
+  return (
+    <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',system-ui,sans-serif"}}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet"/>
+      <div style={{textAlign:"center",padding:"0 24px",maxWidth:420,width:"100%"}}>
+        {/* Logo */}
+        <div style={{marginBottom:20}}>
+          <div style={{width:64,height:64,borderRadius:20,background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:28,boxShadow:"0 8px 32px rgba(155,143,232,0.35)"}}>✦</div>
+          <h1 style={{fontSize:34,fontWeight:700,color:T.text,letterSpacing:-1,margin:"0 0 6px"}}>
+            {APP_NAME}
+          </h1>
+          <p style={{fontSize:13,color:T.muted,letterSpacing:1,margin:0,textTransform:"lowercase"}}>{APP_TAGLINE}</p>
+        </div>
+
+        {authMode === "options" && (
+          <>
+            <p style={{fontSize:14,color:T.muted,lineHeight:1.6,maxWidth:300,margin:"0 auto 28px"}}>
+              Track goals, build habits, capture thoughts — all in one place.
+            </p>
+            {/* Google */}
+            <button onClick={onGoogleLogin} disabled={loading}
+              style={{width:"100%",background:T.isDark?"#fff":"#fff",border:`1px solid ${T.border}`,borderRadius:13,padding:"14px 24px",color:"#111",cursor:loading?"not-allowed":"pointer",fontWeight:700,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:12,opacity:loading?0.7:1,fontFamily:"inherit",boxShadow:"0 2px 16px rgba(0,0,0,0.15)",marginBottom:10}}>
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.29-8.16 2.29-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+              {loading ? "Signing in..." : "Continue with Google"}
+            </button>
+            {/* Email */}
+            <button onClick={()=>setAuthMode("email-login")}
+              style={{width:"100%",background:"transparent",border:`1px solid ${T.border}`,borderRadius:13,padding:"14px 24px",color:T.text,cursor:"pointer",fontWeight:600,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:12,fontFamily:"inherit",marginBottom:10}}>
+              ✉️ Continue with Email
+            </button>
+            {/* Apple - shows but notes it needs enabling */}
+            <button onClick={()=>alert("To enable Apple Sign-In, go to Firebase Console → Authentication → Sign-in method → Apple, and follow the setup steps. Requires Apple Developer account.")}
+              style={{width:"100%",background:T.isDark?"#fff":"#000",border:"none",borderRadius:13,padding:"14px 24px",color:T.isDark?"#000":"#fff",cursor:"pointer",fontWeight:700,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:10,fontFamily:"inherit",marginBottom:24}}>
+              <svg width="16" height="18" viewBox="0 0 814 1000"><path fill="currentColor" d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-161-39.5c-74 0-102.1 39.5-163 39.5s-103.4-61.7-155.5-122.9C92.3 772.7 15.5 658.3 15.5 552.5C15.5 371 141 278 264.1 278c66.4 0 121.9 43.7 163.6 43.7 41.4 0 106.4-46.4 181.3-46.4zm-235.4-158.1c31.1-37.9 53.1-90.8 53.1-143.6 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.1-55.1 135.9 0 8.3 1.3 16.6 1.9 19.2 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-68.5z"/></svg>
+              Continue with Apple
+            </button>
+            <div style={{borderTop:`1px solid ${T.border}`,paddingTop:16,marginBottom:16}}>
+              <button onClick={onDemo}
+                style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.3)",borderRadius:13,padding:"12px 28px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>
+                👀 View Demo
+              </button>
+            </div>
+            <p style={{fontSize:11,color:"rgba(128,128,128,0.5)"}}>Your data is private and synced across devices.</p>
+          </>
+        )}
+
+        {(authMode === "email-login" || authMode === "email-signup") && (
+          <div style={{textAlign:"left"}}>
+            <button onClick={()=>{setAuthMode("options");setError("");}} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:13,marginBottom:20,padding:0,fontFamily:"inherit"}}>← Back</button>
+            <h2 style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:20}}>{authMode==="email-signup"?"Create account":"Sign in"}</h2>
+            {authMode === "email-signup" && (
+              <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" style={inp}/>
+            )}
+            <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" type="email" style={inp}/>
+            <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" type="password" style={inp} onKeyDown={e=>e.key==="Enter"&&handleEmailSubmit()}/>
+            {error && <div style={{color:"#E8645A",fontSize:12,marginBottom:10,padding:"8px 12px",background:"rgba(232,100,90,0.1)",borderRadius:8}}>{error}</div>}
+            {resetSent && <div style={{color:"#4CAF82",fontSize:12,marginBottom:10}}>Reset email sent! Check your inbox.</div>}
+            <button onClick={handleEmailSubmit} disabled={emailLoading}
+              style={{width:"100%",background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:11,padding:"14px",color:"#fff",cursor:emailLoading?"not-allowed":"pointer",fontWeight:700,fontSize:14,fontFamily:"inherit",marginBottom:12,opacity:emailLoading?0.7:1}}>
+              {emailLoading?"Processing...":(authMode==="email-signup"?"Create Account":"Sign In")}
+            </button>
+            {authMode==="email-login" && (
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <button onClick={()=>setAuthMode("email-signup")} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit",padding:0}}>Create account →</button>
+                <button onClick={handleReset} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit",padding:0}}>Forgot password?</button>
+              </div>
+            )}
+            {authMode==="email-signup" && (
+              <button onClick={()=>setAuthMode("email-login")} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit",padding:0}}>Already have an account? Sign in →</button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// ─── SETTINGS PAGE ────────────────────────────────────────────────────────────
+function SettingsPage({ user, demoMode, onLogout, darkMode, setDarkMode, diaryPin, setDiaryPin }) {
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinSuccess, setPinSuccess] = useState(false);
+
+  const savePin = () => {
+    if (pinInput.length < 4) { setPinError("PIN must be at least 4 digits."); return; }
+    if (pinInput !== pinConfirm) { setPinError("PINs don't match."); return; }
+    setDiaryPin(pinInput);
+    setPinError(""); setPinSuccess(true);
+    setTimeout(()=>{ setShowPinSetup(false); setPinInput(""); setPinConfirm(""); setPinSuccess(false); }, 1500);
+  };
+
+  const Section = ({title, children}) => (
+    <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:14,border:`1px solid ${T.border}`}}>
+      <div style={{fontSize:10,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>{title}</div>
+      {children}
+    </div>
+  );
+
+  const Row = ({icon, label, sub, right, onClick}) => (
+    <div onClick={onClick} style={{display:"flex",alignItems:"center",gap:14,padding:"11px 0",borderBottom:`1px solid ${T.border}`,cursor:onClick?"pointer":"default"}} >
+      <div style={{width:36,height:36,borderRadius:10,background:"rgba(155,143,232,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{icon}</div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:13,fontWeight:600,color:T.text}}>{label}</div>
+        {sub && <div style={{fontSize:11,color:T.muted,marginTop:1}}>{sub}</div>}
+      </div>
+      {right}
+    </div>
+  );
+
+  const Toggle = ({on, onToggle}) => (
+    <div onClick={onToggle} style={{width:46,height:26,borderRadius:13,background:on?"#9B8FE8":"rgba(255,255,255,0.15)",position:"relative",cursor:"pointer",transition:"background 0.25s",flexShrink:0}}>
+      <div style={{position:"absolute",top:3,left:on?22:3,width:20,height:20,borderRadius:"50%",background:"#fff",transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
+    </div>
+  );
+
+  return (
+    <div style={{maxWidth:560,margin:"0 auto"}}>
+      <h2 style={{fontSize:22,fontWeight:700,color:T.text,marginBottom:20,letterSpacing:-0.5}}>Settings</h2>
+
+      <Section title="Account">
+        {!demoMode && user ? (
+          <Row icon={user.photoURL ? <img src={user.photoURL} style={{width:36,height:36,borderRadius:10}} alt=""/> : "👤"}
+            label={user.displayName || user.email || "User"}
+            sub={user.email || "Signed in"}
+            right={<span style={{fontSize:11,color:"#4CAF82",fontWeight:600}}>Active</span>}
+          />
+        ) : (
+          <Row icon="👤" label="Demo Mode" sub="Sign in to save your data" />
+        )}
+        <div style={{paddingTop:4}}>
+          <button onClick={onLogout}
+            style={{width:"100%",background:"rgba(232,100,90,0.1)",border:"1px solid rgba(232,100,90,0.25)",borderRadius:10,padding:"11px",color:"#E8645A",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit",marginTop:10}}>
+            {demoMode ? "Exit Demo" : "Sign Out"}
+          </button>
+        </div>
+      </Section>
+
+      <Section title="Appearance">
+        <Row icon={darkMode?"🌙":"☀️"} label="Dark Mode" sub={darkMode?"Currently using dark theme":"Currently using light theme"}
+          right={<Toggle on={darkMode} onToggle={()=>setDarkMode(d=>!d)}/>}
+        />
+      </Section>
+
+      <Section title="Privacy & Security">
+        <Row icon="🔒" label="Diary PIN Lock"
+          sub={diaryPin ? "PIN is set — diary entries are protected" : "No PIN set — diary is open"}
+          onClick={()=>setShowPinSetup(true)}
+          right={<span style={{fontSize:11,color:diaryPin?"#4CAF82":T.muted,fontWeight:600}}>{diaryPin?"Enabled":"Set PIN →"}</span>}
+        />
+        {diaryPin && (
+          <Row icon="🔓" label="Remove Diary PIN" sub="Clear existing PIN protection"
+            onClick={()=>{ setDiaryPin(""); }}
+            right={<span style={{fontSize:11,color:"#E8645A",fontWeight:600}}>Remove</span>}
+          />
+        )}
+      </Section>
+
+      <Section title="About">
+        <Row icon="✦" label={APP_NAME} sub={`${APP_TAGLINE} · v2.0`} />
+        <Row icon="🔥" label="Firebase Sync" sub="Real-time data sync across devices" right={<span style={{fontSize:11,color:"#4CAF82"}}>Active</span>}/>
+        <Row icon="🤖" label="AI Features" sub="Powered by Claude (Anthropic)" />
+      </Section>
+
+      {showPinSetup && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,backdropFilter:"blur(10px)"}}>
+          <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:20,width:"min(380px,94vw)",padding:"32px"}}>
+            <h3 style={{fontSize:18,fontWeight:700,color:T.text,marginBottom:20}}>Set Diary PIN</h3>
+            <input value={pinInput} onChange={e=>setPinInput(e.target.value.replace(/\D/g,"").slice(0,8))} placeholder="Enter PIN (4–8 digits)" type="password" inputMode="numeric"
+              style={{width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:18,outline:"none",marginBottom:10,boxSizing:"border-box",fontFamily:"inherit",letterSpacing:4,textAlign:"center"}}/>
+            <input value={pinConfirm} onChange={e=>setPinConfirm(e.target.value.replace(/\D/g,"").slice(0,8))} placeholder="Confirm PIN" type="password" inputMode="numeric"
+              style={{width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:18,outline:"none",marginBottom:10,boxSizing:"border-box",fontFamily:"inherit",letterSpacing:4,textAlign:"center"}}
+              onKeyDown={e=>e.key==="Enter"&&savePin()}/>
+            {pinError && <div style={{color:"#E8645A",fontSize:12,marginBottom:10}}>{pinError}</div>}
+            {pinSuccess && <div style={{color:"#4CAF82",fontSize:12,marginBottom:10}}>✓ PIN saved!</div>}
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setShowPinSetup(false);setPinInput("");setPinConfirm("");setPinError("");}} style={{flex:1,background:"none",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px",color:T.muted,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+              <button onClick={savePin} style={{flex:2,background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"12px",color:"#fff",cursor:"pointer",fontWeight:700,fontFamily:"inherit"}}>Save PIN</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ─── REMINDERS PAGE ───────────────────────────────────────────────────────────
+function RemindersPage({ reminders, saveReminder, deleteReminder, toggleReminder }) {
+  const [showAdd, setShowAdd] = useState(false);
+  const [newText, setNewText] = useState("");
+  const [newDue, setNewDue] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [filter, setFilter] = useState("all"); // all | pending | done
+  const [catFilter, setCatFilter] = useState("all");
+
+  const categorize = async (text) => {
+    setAiLoading(true);
+    try {
+      const result = await callClaude(
+        `Categorize this reminder into one of these life areas: physical, financial, religious, parenting, career, lifestyle, emotional, travel, health, social.
+Reminder: "${text}"
+Also write a one-sentence note about why it fits that category and how it might connect to a larger life goal.
+Respond ONLY with JSON: {"category": "...", "note": "..."}`,
+        null, 200
+      );
+      const clean = result.replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(clean);
+      return parsed;
+    } catch(e) {
+      return { category: "lifestyle", note: "Added to your reminders." };
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const addReminder = async () => {
+    if (!newText.trim()) return;
+    const ai = await categorize(newText);
+    const r = {
+      id: `r${Date.now()}`,
+      text: newText.trim(),
+      done: false,
+      createdAt: todayStr(),
+      dueDate: newDue || null,
+      category: ai.category,
+      aiNote: ai.note,
+    };
+    saveReminder(r);
+    setNewText(""); setNewDue(""); setShowAdd(false);
+  };
+
+  const allCats = [...new Set(reminders.map(r=>r.category))];
+  const catObj = (id) => CATS.find(c=>c.id===id) || { id, label:id, icon:"◎", color:"#9B8FE8" };
+  const filtered = reminders
+    .filter(r => filter==="all" || (filter==="pending"?!r.done:r.done))
+    .filter(r => catFilter==="all" || r.category===catFilter)
+    .sort((a,b)=>{
+      if (a.done !== b.done) return a.done?1:-1;
+      if (a.dueDate && b.dueDate) return new Date(a.dueDate)-new Date(b.dueDate);
+      if (a.dueDate) return -1; if (b.dueDate) return 1;
+      return new Date(b.createdAt)-new Date(a.createdAt);
+    });
+
+  const pending = reminders.filter(r=>!r.done).length;
+  const overdueCount = reminders.filter(r=>!r.done && r.dueDate && new Date(r.dueDate) < new Date()).length;
+
+  return (
+    <div>
+      {/* Header stats */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:11,marginBottom:20}}>
+        {[
+          {l:"Pending",v:pending,c:"#9B8FE8"},
+          {l:"Overdue",v:overdueCount,c:"#E8645A"},
+          {l:"Completed",v:reminders.filter(r=>r.done).length,c:"#4CAF82"},
+        ].map(x=>(
+          <div key={x.l} style={{background:T.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T.border}`}}>
+            <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>{x.l}</div>
+            <div style={{fontSize:26,fontWeight:700,color:x.c}}>{x.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Controls */}
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",gap:7}}>
+          {["all","pending","done"].map(f=>(
+            <button key={f} onClick={()=>setFilter(f)}
+              style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${filter===f?"rgba(255,255,255,0.3)":T.border}`,background:filter===f?"rgba(255,255,255,0.1)":"transparent",color:filter===f?"#fff":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit",textTransform:"capitalize"}}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <button onClick={()=>setShowAdd(true)}
+          style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"9px 18px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit"}}>
+          + Add Reminder
+        </button>
+      </div>
+
+      {/* Category filter pills */}
+      {allCats.length > 1 && (
+        <div style={{display:"flex",gap:7,marginBottom:16,overflowX:"auto",paddingBottom:2}}>
+          <button onClick={()=>setCatFilter("all")} style={{flexShrink:0,padding:"6px 14px",borderRadius:20,border:`1px solid ${catFilter==="all"?"#9B8FE8":T.border}`,background:catFilter==="all"?"rgba(155,143,232,0.15)":"transparent",color:catFilter==="all"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>All</button>
+          {allCats.map(id=>{
+            const c = catObj(id);
+            return (
+              <button key={id} onClick={()=>setCatFilter(id)}
+                style={{flexShrink:0,padding:"6px 14px",borderRadius:20,border:`1px solid ${catFilter===id?c.color:T.border}`,background:catFilter===id?`${c.color}18`:"transparent",color:catFilter===id?c.color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>
+                {c.icon} {c.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Reminder list */}
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {filtered.length === 0 && (
+          <div style={{textAlign:"center",padding:"60px 0"}}>
+            <div style={{fontSize:40,marginBottom:12}}>🔔</div>
+            <div style={{color:T.muted,fontSize:14}}>No reminders here. Add one to get started.</div>
+          </div>
+        )}
+        {filtered.map(r => {
+          const cat = catObj(r.category);
+          const isOverdue = r.dueDate && !r.done && new Date(r.dueDate) < new Date();
+          const isDueToday = r.dueDate === todayStr() && !r.done;
+          return (
+            <div key={r.id} style={{background:T.card,border:`1px solid ${r.done?"rgba(76,175,130,0.2)":isOverdue?"rgba(232,100,90,0.25)":T.border}`,borderRadius:14,padding:"15px 16px",opacity:r.done?0.6:1}}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                {/* Checkbox */}
+                <div onClick={()=>toggleReminder(r.id)} style={{width:24,height:24,borderRadius:7,border:`2px solid ${r.done?"#4CAF82":"rgba(255,255,255,0.25)"}`,background:r.done?"#4CAF82":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0,marginTop:2,transition:"all 0.2s"}}>
+                  {r.done&&<span style={{color:"#fff",fontSize:12,fontWeight:800}}>✓</span>}
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:600,color:r.done?"rgba(255,255,255,0.4)":T.text,textDecoration:r.done?"line-through":"none",marginBottom:5}}>{r.text}</div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
+                    <span style={{fontSize:10,color:cat.color,background:`${cat.color}18`,padding:"2px 8px",borderRadius:6,fontWeight:700}}>{cat.icon} {cat.label}</span>
+                    {r.dueDate && (
+                      <span style={{fontSize:10,color:isOverdue?"#E8645A":isDueToday?"#C8A96E":T.muted,fontWeight:isOverdue||isDueToday?700:400}}>
+                        {isOverdue?"⚠️ Overdue":isDueToday?"📅 Due today":""} {fmtDate(r.dueDate)}
+                      </span>
+                    )}
+                  </div>
+                  {r.aiNote && (
+                    <div style={{fontSize:11,color:T.muted,marginTop:6,fontStyle:"italic",borderLeft:`2px solid ${cat.color}44`,paddingLeft:8}}>
+                      ✦ {r.aiNote}
+                    </div>
+                  )}
+                </div>
+                <button onClick={()=>deleteReminder(r.id)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.15)",cursor:"pointer",fontSize:14,padding:"2px 4px",flexShrink:0}}>✕</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add Modal */}
+      {showAdd && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(10px)"}}>
+          <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:20,width:"min(460px,95vw)",padding:"28px"}}>
+            <h3 style={{fontSize:17,fontWeight:700,color:T.text,marginBottom:6}}>New Reminder</h3>
+            <p style={{fontSize:12,color:T.muted,marginBottom:18}}>AI will auto-categorize this into a life area for your weekly summary.</p>
+            <textarea value={newText} onChange={e=>setNewText(e.target.value)} placeholder="What do you need to remember?" rows={3} autoFocus
+              style={{width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:11,padding:"12px 15px",color:T.text,fontSize:14,outline:"none",resize:"vertical",marginBottom:12,boxSizing:"border-box",fontFamily:"inherit"}}/>
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:11,color:T.muted,marginBottom:6,letterSpacing:1}}>DUE DATE (optional)</div>
+              <input type="date" value={newDue} onChange={e=>setNewDue(e.target.value)}
+                style={{background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"10px 14px",color:T.text,fontSize:13,outline:"none",fontFamily:"inherit"}}/>
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setShowAdd(false);setNewText("");setNewDue("");}} style={{flex:1,background:"none",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px",color:T.muted,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+              <button onClick={addReminder} disabled={aiLoading||!newText.trim()}
+                style={{flex:2,background:newText.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:10,padding:"12px",color:newText.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:newText.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>
+                {aiLoading?"✦ Categorizing...":"Add Reminder"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ─── DIARY PAGE ───────────────────────────────────────────────────────────────
+function DiaryPage({ entries, saveEntry, deleteEntry, diaryPin }) {
+  const [locked, setLocked] = useState(!!diaryPin);
+  const [pinAttempt, setPinAttempt] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [showWrite, setShowWrite] = useState(false);
+  const [entryText, setEntryText] = useState("");
+  const [entryMood, setEntryMood] = useState("good");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [viewMode, setViewMode] = useState("timeline"); // timeline | search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
+  const [catFilter, setCatFilter] = useState("all");
+
+  const MOODS = [
+    { id:"great", label:"Great", emoji:"🌟" },
+    { id:"good",  label:"Good",  emoji:"😊" },
+    { id:"ok",    label:"Okay",  emoji:"😐" },
+    { id:"low",   label:"Low",   emoji:"😔" },
+  ];
+
+  const unlock = () => {
+    if (pinAttempt === diaryPin) { setLocked(false); setPinError(""); }
+    else { setPinError("Incorrect PIN. Try again."); setPinAttempt(""); }
+  };
+
+  const categorizeEntry = async (text) => {
+    const result = await callClaude(
+      `Analyze this journal entry and categorize it into 1–3 of these life areas: physical, financial, religious, parenting, career, lifestyle, emotional, travel, health, social.
+Journal entry: "${text.slice(0,800)}"
+Return ONLY a JSON object: {"categories": ["emotional", "physical"], "summary": "one sentence capturing the main theme"}`,
+      null, 300
+    );
+    try {
+      const clean = result.replace(/```json|```/g,"").trim();
+      return JSON.parse(clean);
+    } catch { return { categories: ["lifestyle"], summary: "" }; }
+  };
+
+  const submitEntry = async () => {
+    if (!entryText.trim() || entryText.trim().length < 10) return;
+    setAiLoading(true);
+    const ai = await categorizeEntry(entryText);
+    const entry = {
+      id: `diary${Date.now()}`,
+      text: entryText.trim(),
+      mood: entryMood,
+      categories: ai.categories || ["lifestyle"],
+      summary: ai.summary || "",
+      wordCount: entryText.trim().split(/\s+/).length,
+      createdAt: new Date().toISOString(),
+    };
+    saveEntry(entry);
+    setEntryText(""); setEntryMood("good"); setShowWrite(false);
+    setAiLoading(false);
+  };
+
+  const aiSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setSearchLoading(true);
+    const entryList = entries.slice(0,50).map((e,i)=>`[${i}] ${fmtDate(e.createdAt.split("T")[0])}: ${e.text.slice(0,200)}`).join("\n\n");
+    const result = await callClaude(
+      `A user is searching their journal for: "${searchQuery}"
+Here are their journal entries:
+${entryList}
+Return the indices of entries that match the search topic (0-based). Return at most 10.
+Respond ONLY with JSON: {"indices": [0, 3, 5], "explanation": "Found X entries about..."}`,
+      null, 400
+    );
+    try {
+      const clean = result.replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(clean);
+      const matched = (parsed.indices || []).map(i=>entries[i]).filter(Boolean);
+      setSearchResults({ entries: matched, explanation: parsed.explanation || "" });
+    } catch { setSearchResults({ entries: [], explanation: "Couldn't parse results." }); }
+    setSearchLoading(false);
+  };
+
+  const sortedEntries = [...entries].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const allCats = [...new Set(entries.flatMap(e=>e.categories||[]))];
+  const displayedEntries = viewMode==="search" ? (searchResults?.entries || []) :
+    catFilter==="all" ? sortedEntries : sortedEntries.filter(e=>(e.categories||[]).includes(catFilter));
+
+  const catObj = (id) => CATS.find(c=>c.id===id) || { id, label:id, icon:"◎", color:"#9B8FE8" };
+  const moodColors = { great:"#4CAF82", good:"#9B8FE8", ok:"#C8A96E", low:"#E87AAF" };
+
+  // Locked state
+  if (locked) return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"40vh",gap:16}}>
+      <div style={{fontSize:48}}>🔒</div>
+      <h3 style={{fontSize:18,fontWeight:700,color:T.text,margin:0}}>Diary is locked</h3>
+      <p style={{fontSize:13,color:T.muted,margin:0}}>Enter your PIN to access your entries.</p>
+      <input value={pinAttempt} onChange={e=>setPinAttempt(e.target.value.replace(/\D/g,""))} type="password" inputMode="numeric" placeholder="Enter PIN"
+        style={{width:180,background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:12,padding:"13px",color:T.text,fontSize:20,outline:"none",fontFamily:"inherit",textAlign:"center",letterSpacing:4}}
+        onKeyDown={e=>e.key==="Enter"&&unlock()}/>
+      {pinError && <div style={{color:"#E8645A",fontSize:12}}>{pinError}</div>}
+      <button onClick={unlock} style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:11,padding:"11px 28px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:14,fontFamily:"inherit"}}>Unlock</button>
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Stats row */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:20}}>
+        {[
+          {l:"Entries",v:entries.length,c:"#9B8FE8"},
+          {l:"Total Words",v:entries.reduce((a,e)=>a+(e.wordCount||0),0).toLocaleString(),c:"#7EB8D4"},
+          {l:"This Month",v:entries.filter(e=>e.createdAt?.startsWith(new Date().toISOString().slice(0,7))).length,c:"#C8A96E"},
+          {l:"Avg Mood",v:entries.filter(e=>e.mood).length>0?MOODS.find(m=>m.id===entries.slice(-7).reduce((b,e)=>{const mi=MOODS.findIndex(m=>m.id===e.mood);return mi>-1&&mi<MOODS.findIndex(m=>m.id===b)?e.mood:b;},"ok"))?.emoji||"😊":"—",c:"#E87AAF"},
+        ].map(x=>(
+          <div key={x.l} style={{background:T.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T.border}`}}>
+            <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>{x.l}</div>
+            <div style={{fontSize:22,fontWeight:700,color:x.c}}>{x.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Controls */}
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",gap:7}}>
+          <button onClick={()=>setViewMode("timeline")} style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${viewMode==="timeline"?"rgba(255,255,255,0.3)":T.border}`,background:viewMode==="timeline"?"rgba(255,255,255,0.1)":"transparent",color:viewMode==="timeline"?"#fff":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>📅 Timeline</button>
+          <button onClick={()=>setViewMode("search")} style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${viewMode==="search"?"rgba(155,143,232,0.6)":T.border}`,background:viewMode==="search"?"rgba(155,143,232,0.12)":"transparent",color:viewMode==="search"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>✦ AI Search</button>
+        </div>
+        <button onClick={()=>setShowWrite(true)}
+          style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"9px 18px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit"}}>
+          + New Entry
+        </button>
+      </div>
+
+      {/* AI Search bar */}
+      {viewMode==="search" && (
+        <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:16,border:`1px solid ${T.border}`}}>
+          <div style={{fontSize:11,color:"#9B8FE8",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:10}}>✦ AI Journal Search</div>
+          <p style={{fontSize:12,color:T.muted,marginBottom:12,lineHeight:1.5}}>Ask in plain language — "entries about my ex", "times I felt proud", "money stress", "moments with my kids"</p>
+          <div style={{display:"flex",gap:8}}>
+            <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search your entries..."
+              onKeyDown={e=>e.key==="Enter"&&aiSearch()}
+              style={{flex:1,background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"11px 14px",color:T.text,fontSize:13,outline:"none",fontFamily:"inherit"}}/>
+            <button onClick={aiSearch} disabled={searchLoading||!searchQuery.trim()}
+              style={{background:searchQuery.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:10,padding:"11px 18px",color:searchQuery.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:searchQuery.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:12,fontFamily:"inherit"}}>
+              {searchLoading?"Searching...":"Search"}
+            </button>
+          </div>
+          {searchResults && (
+            <div style={{marginTop:10,fontSize:12,color:"#9B8FE8",fontStyle:"italic"}}>{searchResults.explanation}</div>
+          )}
+        </div>
+      )}
+
+      {/* Category filter (timeline only) */}
+      {viewMode==="timeline" && allCats.length > 1 && (
+        <div style={{display:"flex",gap:7,marginBottom:16,overflowX:"auto",paddingBottom:2}}>
+          <button onClick={()=>setCatFilter("all")} style={{flexShrink:0,padding:"6px 14px",borderRadius:20,border:`1px solid ${catFilter==="all"?"#9B8FE8":T.border}`,background:catFilter==="all"?"rgba(155,143,232,0.15)":"transparent",color:catFilter==="all"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>All</button>
+          {allCats.map(id=>{
+            const c = catObj(id);
+            return (
+              <button key={id} onClick={()=>setCatFilter(id)} style={{flexShrink:0,padding:"6px 14px",borderRadius:20,border:`1px solid ${catFilter===id?c.color:T.border}`,background:catFilter===id?`${c.color}18`:"transparent",color:catFilter===id?c.color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>
+                {c.icon} {c.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Entry list */}
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+        {displayedEntries.length === 0 && (
+          <div style={{textAlign:"center",padding:"60px 0"}}>
+            <div style={{fontSize:40,marginBottom:12}}>📓</div>
+            <div style={{color:T.muted,fontSize:14}}>{viewMode==="search"?"Run a search to find entries.":"No entries yet. Write your first one."}</div>
+          </div>
+        )}
+        {displayedEntries.map(e => {
+          const expanded = expandedId === e.id;
+          const mood = MOODS.find(m=>m.id===e.mood)||MOODS[1];
+          const dateStr = e.createdAt ? fmtDate(e.createdAt.split("T")[0]) : "";
+          return (
+            <div key={e.id} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:"16px 18px",transition:"all 0.2s"}}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:12,marginBottom:8}}>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:6}}>
+                    <span style={{fontSize:11,color:T.muted}}>{dateStr}</span>
+                    <span style={{fontSize:13}}>{mood.emoji}</span>
+                    {(e.categories||[]).map(c=>{
+                      const cat = catObj(c);
+                      return <span key={c} style={{fontSize:9,color:cat.color,background:`${cat.color}18`,padding:"2px 7px",borderRadius:5,fontWeight:700}}>{cat.icon} {cat.label}</span>;
+                    })}
+                    <span style={{fontSize:10,color:T.muted}}>{e.wordCount} words</span>
+                  </div>
+                  {e.summary && !expanded && (
+                    <div style={{fontSize:12,color:T.muted,fontStyle:"italic",marginBottom:6}}>{e.summary}</div>
+                  )}
+                  <div style={{fontSize:13,color:T.text,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
+                    {expanded ? e.text : e.text.slice(0,180)+(e.text.length>180?"...":"")}
+                  </div>
+                </div>
+                <button onClick={()=>deleteEntry(e.id)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.15)",cursor:"pointer",fontSize:13,padding:"2px 4px",flexShrink:0}}>✕</button>
+              </div>
+              {e.text.length > 180 && (
+                <button onClick={()=>setExpandedId(expanded?null:e.id)} style={{background:"none",border:"none",color:"#9B8FE8",cursor:"pointer",fontSize:11,fontWeight:600,padding:0,fontFamily:"inherit"}}>
+                  {expanded?"↑ Show less":"↓ Read more"}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Write Modal */}
+      {showWrite && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(10px)"}}>
+          <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:20,width:"min(580px,96vw)",maxHeight:"90vh",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{padding:"20px 24px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontWeight:700,color:T.text,fontSize:16}}>New Journal Entry</div>
+                <div style={{fontSize:11,color:T.muted,marginTop:2}}>AI will categorize it automatically</div>
+              </div>
+              <button onClick={()=>setShowWrite(false)} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 14px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>
+            </div>
+            <div style={{flex:1,overflowY:"auto",padding:"20px 24px"}}>
+              <textarea value={entryText} onChange={e=>setEntryText(e.target.value)} placeholder="What's on your mind today? Write freely — goals, reflections, wins, struggles, anything." rows={10} autoFocus
+                style={{width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:11,padding:"14px",color:T.text,fontSize:14,outline:"none",resize:"none",boxSizing:"border-box",fontFamily:"inherit",lineHeight:1.7}}/>
+              <div style={{fontSize:11,color:T.muted,marginTop:6,textAlign:"right"}}>{entryText.trim().split(/\s+/).filter(Boolean).length} words</div>
+              <div style={{marginTop:16}}>
+                <div style={{fontSize:11,color:T.muted,marginBottom:10,letterSpacing:1}}>HOW ARE YOU FEELING?</div>
+                <div style={{display:"flex",gap:10}}>
+                  {MOODS.map(m=>(
+                    <button key={m.id} onClick={()=>setEntryMood(m.id)}
+                      style={{flex:1,padding:"10px 8px",borderRadius:10,border:`1.5px solid ${entryMood===m.id?moodColors[m.id]:T.faint}`,background:entryMood===m.id?`${moodColors[m.id]}18`:"transparent",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+                      <div style={{fontSize:18,marginBottom:3}}>{m.emoji}</div>
+                      <div style={{fontSize:10,color:entryMood===m.id?moodColors[m.id]:T.muted,fontWeight:600}}>{m.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{padding:"16px 24px",borderTop:`1px solid ${T.border}`,display:"flex",gap:10}}>
+              <button onClick={()=>setShowWrite(false)} style={{flex:1,background:"none",border:`1px solid ${T.faint}`,borderRadius:11,padding:"12px",color:T.muted,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+              <button onClick={submitEntry} disabled={aiLoading||entryText.trim().length<10}
+                style={{flex:3,background:entryText.trim().length>=10?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:11,padding:"12px",color:entryText.trim().length>=10?"#fff":"rgba(255,255,255,0.2)",cursor:entryText.trim().length>=10?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>
+                {aiLoading?"✦ Categorizing entry...":"Save Entry →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ─── WEEKLY WRAPPED ───────────────────────────────────────────────────────────
+function WeeklyWrapped({ habits, habitLogs, goals, reminders, diary, onClose }) {
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    generateSummary();
+  }, []);
+
+  const generateSummary = async () => {
+    const weekStart = new Date(); weekStart.setDate(weekStart.getDate()-7);
+    const weekDates = [];
+    for (let i=6; i>=0; i--) { const d=new Date(); d.setDate(d.getDate()-i); weekDates.push(d.toISOString().split("T")[0]); }
+
+    const habitCompletion = weekDates.map(d => {
+      const log = habitLogs[d]||{};
+      const done = habits.filter(h=>log[h.id]).length;
+      return { date:d, pct: habits.length>0?Math.round(done/habits.length*100):0 };
+    });
+    const avgHabit = Math.round(habitCompletion.reduce((a,d)=>a+d.pct,0)/7);
+    const topHabit = habits.map(h=>({...h, done:weekDates.filter(d=>habitLogs[d]?.[h.id]).length})).sort((a,b)=>b.done-a.done)[0];
+    const weekReminders = reminders.filter(r=>r.createdAt >= weekDates[0]);
+    const weekDiary = diary.filter(e=>e.createdAt?.split("T")[0] >= weekDates[0]);
+    const goalProgress = goals.map(g=>({title:g.title,pct:calcProgress(g)})).sort((a,b)=>b.pct-a.pct).slice(0,3);
+
+    const prompt = `Generate a "Weekly Wrapped" summary — like Spotify Wrapped but for someone's life. Make it warm, specific, and motivating.
+
+Data:
+- Habit completion avg: ${avgHabit}% this week
+- Best habit: ${topHabit?.label || "none"} (${topHabit?.done || 0}/7 days)
+- Reminders added this week: ${weekReminders.length} (categories: ${[...new Set(weekReminders.map(r=>r.category))].join(", ")||"none"})
+- Diary entries this week: ${weekDiary.length} (${weekDiary.reduce((a,e)=>a+(e.wordCount||0),0)} total words)
+- Top goal progress: ${goalProgress.map(g=>`${g.title}: ${g.pct}%`).join(", ")||"none"}
+
+Write a 4-part weekly summary with these sections (use these exact headers):
+🌟 THIS WEEK'S HIGHLIGHT
+📊 BY THE NUMBERS
+🔍 PATTERN SPOTTED
+⚡ CHALLENGE FOR NEXT WEEK
+
+Keep it under 250 words. Be specific, warm, and direct. Make them feel seen.`;
+
+    try {
+      const result = await callClaude(prompt, null, 500);
+      setSummary(result);
+    } catch { setSummary("Couldn't generate summary. Try again later."); }
+    setLoading(false);
+  };
+
+  const parts = summary ? summary.split(/(?=🌟|📊|🔍|⚡)/).filter(Boolean) : [];
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,backdropFilter:"blur(20px)"}}>
+      <div style={{background:"linear-gradient(135deg,#0D0F18,#13151E)",border:"1px solid rgba(155,143,232,0.3)",borderRadius:24,width:"min(560px,96vw)",maxHeight:"85vh",overflowY:"auto",padding:"32px",position:"relative"}}>
+        <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:8,padding:"6px 12px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕ Close</button>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <div style={{fontSize:36,marginBottom:8}}>✦</div>
+          <h2 style={{fontSize:24,fontWeight:700,color:"#fff",margin:"0 0 6px",letterSpacing:-0.5}}>Weekly Wrapped</h2>
+          <p style={{fontSize:12,color:T.muted,margin:0}}>Your week in review · {fmtDate(new Date(Date.now()-6*86400000).toISOString().split("T")[0])} – {fmtDate(todayStr())}</p>
+        </div>
+        {loading ? (
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14,padding:"40px 0"}}>
+            <div style={{display:"flex",gap:6}}>{[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#9B8FE8",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div>
+            <div style={{fontSize:13,color:T.muted}}>Analyzing your week...</div>
+          </div>
+        ) : (
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {parts.map((part,i) => (
+              <div key={i} style={{background:"rgba(155,143,232,0.06)",border:"1px solid rgba(155,143,232,0.15)",borderRadius:14,padding:"16px 18px"}}>
+                <p style={{fontSize:13,color:"rgba(255,255,255,0.8)",margin:0,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{part.trim()}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── ROOT APP ─────────────────────────────────────────────────────────────────
+export default function App() {
+  const [darkMode, setDarkMode] = useState(true);
+  // Apply theme globally
+  Object.assign(T, darkMode ? DARK_THEME : LIGHT_THEME);
+
+  // ── Auth state ──
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+
+  // ── Data state ──
+  const [goals, setGoals] = useState([]);
+  const [habits, setHabits] = useState([]);
+  const [habitLogs, setHabitLogs] = useState({});
+  const [reminders, setReminders] = useState([]);
+  const [diary, setDiary] = useState([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // ── UI state ──
+  const [tab, setTab] = useState("goals");
+  const [showAI, setShowAI] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editGoal, setEditGoal] = useState(null);
+  const [suggestFor, setSuggestFor] = useState(null);
+  const [showWrapped, setShowWrapped] = useState(false);
+  const [diaryPin, setDiaryPin] = useState(() => { try { return localStorage.getItem("lumina_diary_pin")||""; } catch { return ""; }});
+
+  useEffect(() => { try { localStorage.setItem("lumina_diary_pin", diaryPin); } catch {} }, [diaryPin]);
+
   // ── Auth listener ──
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setAuthLoading(false);
-    });
+    const unsub = onAuthStateChanged(auth, (u) => { setUser(u); setAuthLoading(false); });
     return unsub;
   }, []);
-  // ── Firestore listeners — real-time sync ──				
-  useEffect(() => {				
-    if (!user) return;				
-    const uid = user.uid;				
-    // Goals				
-    const unsubGoals = onSnapshot(collection(db, "users", uid, "goals"), snap => {				
-      const data = snap.docs.map(d => d.data());				
-      setGoals(data);				
-    });				
-    // Habits				
-    const unsubHabits = onSnapshot(collection(db, "users", uid, "habits"), snap => {				
-      const data = snap.docs.map(d => d.data());				
-      setHabits(data);				
-    });				
-    // Habit logs — last 90 days				
-    const unsubLogs = onSnapshot(collection(db, "users", uid, "habitLogs"), snap => {				
-      const logs = {};				
-      snap.docs.forEach(d => { logs[d.id] = d.data(); });				
-      setHabitLogs(logs);				
-      setDataLoaded(true);				
-    });				
-    return () => { unsubGoals(); unsubHabits(); unsubLogs(); };				
-  }, [user]);				
-  // ── Firebase write helpers ──				
-  const fbSaveGoal = async (goal) => {				
-    if (!user) return;				
-    await setDoc(doc(db, "users", user.uid, "goals", goal.id), goal);				
-  };				
-  const fbDeleteGoal = async (id) => {				
-    if (!user) return;				
-    await deleteDoc(doc(db, "users", user.uid, "goals", id));				
-  };				
-  const fbSaveHabit = async (habit) => {				
-    if (!user) return;				
-    await setDoc(doc(db, "users", user.uid, "habits", habit.id), habit);				
-  };				
-  const fbDeleteHabit = async (id) => {				
-    if (!user) return;				
-    await deleteDoc(doc(db, "users", user.uid, "habits", id));				
-  };				
-  const fbLogHabit = async (date, habitId, value) => {				
-    if (!user) return;				
-    const ref = doc(db, "users", user.uid, "habitLogs", date);				
-    const current = habitLogs[date] || {};				
-    await setDoc(ref, { ...current, [habitId]: value });				
-  };				
-  // ── Wrapped setters that write to Firestore + update local state ──				
-  const saveGoal = (goal) => {				
-    setGoals(gs => gs.find(g=>g.id===goal.id) ? gs.map(g=>g.id===goal.id?goal:g) : [...gs,goal]);				
-    fbSaveGoal(goal);				
-  };				
-  const deleteGoal = (id) => {				
-    setGoals(gs => gs.filter(g=>g.id!==id));				
-    fbDeleteGoal(id);				
-  };				
-  const toggleSubtask = (goalId, subtaskId) => {				
-    setGoals(gs => gs.map(g => {				
-      if (g.id !== goalId) return g;				
-      const updated = { ...g, subtasks: g.subtasks.map(s => s.id!==subtaskId ? s : {...s, done:!s.done}) };				
-      fbSaveGoal(updated);				
-      return updated;				
-    }));				
-  };				
-  const addJournalNote = (goalId, entry) => {				
-    setGoals(gs => gs.map(g => {				
-      if (g.id !== goalId) return g;				
-      const updated = { ...g, journal: [...g.journal, entry] };				
-      fbSaveGoal(updated);				
-      return updated;				
-    }));				
-  };				
-  const saveHabit = (habit) => {				
-    setHabits(hs => hs.find(h=>h.id===habit.id) ? hs.map(h=>h.id===habit.id?habit:h) : [...hs,habit]);				
-    fbSaveHabit(habit);				
-  };				
-  const deleteHabit = (id) => {				
-    setHabits(hs => hs.filter(h=>h.id!==id));				
-    fbDeleteHabit(id);				
-  };				
-  const toggleHabitLog = (date, habitId, current) => {				
-    const newVal = !current;				
-    setHabitLogs(logs => ({ ...logs, [date]: { ...(logs[date]||{}), [habitId]: newVal } }));				
-    fbLogHabit(date, habitId, newVal);				
-  };				
-  const addHabits = (newHabits) => {				
-    newHabits.forEach(h => saveHabit(h));				
-  };				
-  const handleLogin = async () => {
+
+  // ── Firestore listeners ──
+  useEffect(() => {
+    if (!user) return;
+    const uid = user.uid;
+    const unsubGoals    = onSnapshot(collection(db,"users",uid,"goals"),    snap=>setGoals(snap.docs.map(d=>d.data())));
+    const unsubHabits   = onSnapshot(collection(db,"users",uid,"habits"),   snap=>setHabits(snap.docs.map(d=>d.data())));
+    const unsubLogs     = onSnapshot(collection(db,"users",uid,"habitLogs"),snap=>{ const l={}; snap.docs.forEach(d=>{l[d.id]=d.data();}); setHabitLogs(l); setDataLoaded(true); });
+    const unsubReminders= onSnapshot(collection(db,"users",uid,"reminders"),snap=>setReminders(snap.docs.map(d=>d.data())));
+    const unsubDiary    = onSnapshot(collection(db,"users",uid,"diary"),    snap=>setDiary(snap.docs.map(d=>d.data())));
+    return ()=>{ unsubGoals(); unsubHabits(); unsubLogs(); unsubReminders(); unsubDiary(); };
+  }, [user]);
+
+  // ── Firestore helpers ──
+  const fbSave  = (col, data) => { if(!user||demoMode) return; setDoc(doc(db,"users",user.uid,col,data.id), data); };
+  const fbDel   = (col, id)   => { if(!user||demoMode) return; deleteDoc(doc(db,"users",user.uid,col,id)); };
+
+  const fbSaveGoal    = g  => fbSave("goals", g);
+  const fbDeleteGoal  = id => fbDel("goals", id);
+  const fbSaveHabit   = h  => fbSave("habits", h);
+  const fbDeleteHabit = id => fbDel("habits", id);
+  const fbLogHabit    = (date, hId, val) => { if(!user||demoMode) return; setDoc(doc(db,"users",user.uid,"habitLogs",date),{[hId]:val},{merge:true}); };
+  const fbSaveReminder= r  => fbSave("reminders", r);
+  const fbDelReminder = id => fbDel("reminders", id);
+  const fbSaveDiary   = e  => fbSave("diary", e);
+  const fbDelDiary    = id => fbDel("diary", id);
+
+  // ── Goal handlers ──
+  const saveGoal = goal => { setGoals(gs=>gs.find(g=>g.id===goal.id)?gs.map(g=>g.id===goal.id?goal:g):[...gs,goal]); fbSaveGoal(goal); };
+  const deleteGoal = id => { setGoals(gs=>gs.filter(g=>g.id!==id)); fbDeleteGoal(id); };
+  const toggleSubtask = (goalId, subtaskId) => {
+    setGoals(gs=>gs.map(g=>{
+      if(g.id!==goalId) return g;
+      const updated = {...g, subtasks:g.subtasks.map(s=>s.id!==subtaskId?s:{...s,done:!s.done})};
+      fbSaveGoal(updated); return updated;
+    }));
+  };
+  const addJournalNote = (goalId, entry) => {
+    setGoals(gs=>gs.map(g=>{
+      if(g.id!==goalId) return g;
+      const updated = {...g, journal:[...g.journal,entry]};
+      fbSaveGoal(updated); return updated;
+    }));
+  };
+
+  // ── Habit handlers ──
+  const saveHabit = h => { setHabits(hs=>hs.find(x=>x.id===h.id)?hs.map(x=>x.id===h.id?h:x):[...hs,h]); fbSaveHabit(h); };
+  const deleteHabit = id => { setHabits(hs=>hs.filter(h=>h.id!==id)); fbDeleteHabit(id); };
+  const toggleHabitLog = (date, habitId, current) => {
+    const nv = !current;
+    setHabitLogs(l=>({...l,[date]:{...(l[date]||{}),[habitId]:nv}}));
+    fbLogHabit(date, habitId, nv);
+  };
+  const addHabits = newHabits => newHabits.forEach(h=>saveHabit(h));
+
+  // ── Reminder handlers ──
+  const saveReminder = r => { setReminders(rs=>rs.find(x=>x.id===r.id)?rs.map(x=>x.id===r.id?r:x):[...rs,r]); fbSaveReminder(r); };
+  const deleteReminder = id => { setReminders(rs=>rs.filter(r=>r.id!==id)); fbDelReminder(id); };
+  const toggleReminder = id => {
+    setReminders(rs=>rs.map(r=>{
+      if(r.id!==id) return r;
+      const updated = {...r, done:!r.done};
+      fbSaveReminder(updated); return updated;
+    }));
+  };
+
+  // ── Diary handlers ──
+  const saveDiaryEntry = e => { setDiary(ds=>ds.find(x=>x.id===e.id)?ds.map(x=>x.id===e.id?e:x):[...ds,e]); fbSaveDiary(e); };
+  const deleteDiaryEntry = id => { setDiary(ds=>ds.filter(e=>e.id!==id)); fbDelDiary(id); };
+
+  // ── Auth handlers ──
+  const handleGoogleLogin = async () => {
     setLoginLoading(true);
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err) {
-      console.error("Login error:", err);
-    } finally {
-      setLoginLoading(false);
+    try { await signInWithPopup(auth, googleProvider); }
+    catch(err) { console.error("Login error:", err); }
+    finally { setLoginLoading(false); }
+  };
+  const handleEmailLogin = async (email, password) => {
+    await signInWithEmailAndPassword(auth, email, password);
+  };
+  const handleEmailSignup = async (email, password, name) => {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    if (name && cred.user) {
+      await cred.user.updateProfile({ displayName: name }).catch(()=>{});
     }
+  };
+  const handleLogout = () => {
+    signOut(auth);
+    setDemoMode(false); setGoals([]); setHabits([]); setHabitLogs({}); setReminders([]); setDiary([]);
   };
   const handleDemo = () => {
     setDemoMode(true);
-    setGoals(SEED_GOALS);
-    setHabits(SEED_HABITS);
-    setHabitLogs(generateDemoLogs(SEED_HABITS));
-  };				
-  const handleLogout = () => {				
-    signOut(auth);				
-    setDemoMode(false);				
-    setGoals([]);				
-    setHabits([]);				
-    setHabitLogs({});				
-  };				
-  const greet = () => { const h=new Date().getHours(); return h<12?"Good morning":h<17?"Good afternoon":"Good evening"; };				
-  const today = todayStr();				
-  const todayLog = habitLogs[today]||{};				
-  const todayPct = habits.length>0 ? Math.round(habits.filter(h=>todayLog[h.id]).length/habits.length*100) : 0;				
-  // ── Render states ──				
-  if (authLoading) return (				
-    <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>				
-      <div style={{display:"flex",gap:8}}>{[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#9B8FE8",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div>				
-      <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>				
-    </div>				
-  );				
-  if (!user && !demoMode) return <LoginScreen onLogin={handleLogin} onDemo={handleDemo} loading={loginLoading}/>;				
-  return (				
-    <div style={{minHeight:"100vh",background:T.bg,fontFamily:"'DM Sans',system-ui,sans-serif",color:T.text}}>				
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet"/>				
-      {/* Header */}				
-      <div style={{borderBottom:`1px solid ${T.border}`,padding:"14px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,background:"rgba(7,8,12,0.97)",backdropFilter:"blur(20px)",zIndex:10,gap:16,flexWrap:"wrap"}}>				
-        <div style={{flexShrink:0}}>				
-          <div style={{fontSize:10,color:T.muted,letterSpacing:3,textTransform:"uppercase",marginBottom:1}}>{greet()}, {demoMode ? "Demo" : user?.displayName?.split(" ")[0]}</div>				
-          <div style={{display:"flex",alignItems:"center",gap:10}}>				
-            <h1 style={{fontSize:18,fontWeight:700,margin:0,letterSpacing:-0.5}}>Life <span style={{color:"rgba(255,255,255,0.28)",fontWeight:300,fontStyle:"italic"}}>Dashboard</span></h1>				
-            {tab==="habits"&&<div style={{fontSize:10,color:todayPct===100?"#4CAF82":"#9B8FE8",fontWeight:700,background:todayPct===100?"rgba(76,175,130,0.12)":"rgba(155,143,232,0.12)",padding:"3px 8px",borderRadius:6}}>{todayPct}% today</div>}				
-          </div>				
-        </div>				
-        <Nav tab={tab} setTab={setTab}/>				
-        <div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>				
-          <button onClick={()=>setShowAI(true)} style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.28)",borderRadius:10,padding:"9px 16px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit"}}>✦ AI Coach</button>				
-          {tab==="goals"&&<button onClick={()=>{setEditGoal(null);setShowModal(true);}} style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"9px 18px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",boxShadow:"0 4px 16px rgba(155,143,232,0.25)"}}>+ New Goal</button>}				
-          {demoMode				
-            ? <button onClick={handleLogin} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"9px 14px",color:"rgba(255,255,255,0.6)",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>Sign in to save →</button>				
-            : <img src={user?.photoURL} alt="" onClick={handleLogout} title="Sign out" style={{width:30,height:30,borderRadius:"50%",cursor:"pointer",border:"2px solid rgba(255,255,255,0.15)",flexShrink:0}}/>				
-          }				
-        </div>				
-      </div>				
-      <div style={{maxWidth:900,margin:"0 auto",padding:"22px 18px"}}>				
-        {tab==="goals"&&<GoalsPage goals={goals} setGoals={setGoals} saveGoal={saveGoal} deleteGoal={deleteGoal} toggleSubtask={toggleSubtask} addJournalNote={addJournalNote} setShowAI={setShowAI} setShowModal={setShowModal} setEditGoal={setEditGoal} onImportDemoGoals={!demoMode ? ()=>SEED_GOALS.forEach(g=>saveGoal({...g,id:"import_"+g.id})) : null}/>}				
-        {tab==="habits"&&<HabitsPage habits={habits} saveHabit={saveHabit} deleteHabit={deleteHabit} habitLogs={habitLogs} toggleHabitLog={toggleHabitLog} addHabits={addHabits}/>}				
-        {tab==="analytics"&&<AnalyticsPage habits={habits} habitLogs={habitLogs} goals={goals}/>}				
-      </div>				
-      {showModal&&<SmartModal editGoal={editGoal} onSave={goal=>{				
-        const isEdit=!!editGoal;				
-        saveGoal(goal);				
-        setShowModal(false); setEditGoal(null);				
-        if (!isEdit) setSuggestFor(goal);				
-      }} onClose={()=>{setShowModal(false);setEditGoal(null);}}/>}				
-      {showAI&&<AICoachModal onGoalGenerated={goal=>{				
-        saveGoal(goal);				
-        setShowAI(false);				
-        setSuggestFor(goal);				
-      }} onClose={()=>setShowAI(false)}/>}				
-      {suggestFor&&<HabitSuggester goal={suggestFor} existingHabits={habits}				
-        onAdd={addHabits} onClose={()=>setSuggestFor(null)}/>}				
-    </div>				
-  );				
-}				
+    setGoals(SEED_GOALS); setHabits(SEED_HABITS); setHabitLogs(generateDemoLogs(SEED_HABITS));
+    setReminders(SEED_REMINDERS); setDiary(SEED_DIARY);
+  };
+
+  const greet = () => { const h=new Date().getHours(); return h<12?"Good morning":h<17?"Good afternoon":"Good evening"; };
+  const today = todayStr();
+  const todayLog = habitLogs[today]||{};
+  const todayPct = habits.length>0 ? Math.round(habits.filter(h=>todayLog[h.id]).length/habits.length*100) : 0;
+
+  // ── Loading ──
+  if (authLoading) return (
+    <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{display:"flex",gap:8}}>{[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#9B8FE8",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div>
+      <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>
+    </div>
+  );
+
+  // ── Login screen ──
+  if (!user && !demoMode) return (
+    <LoginScreen
+      onGoogleLogin={handleGoogleLogin}
+      onEmailLogin={handleEmailLogin}
+      onEmailSignup={handleEmailSignup}
+      loading={loginLoading}
+      onDemo={handleDemo}
+    />
+  );
+
+  return (
+    <div style={{minHeight:"100vh",background:T.bg,fontFamily:"'DM Sans',system-ui,sans-serif",color:T.text,transition:"background 0.3s,color 0.3s"}}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet"/>
+
+      {/* Header */}
+      <div style={{borderBottom:`1px solid ${T.border}`,padding:"12px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,background:darkMode?"rgba(7,8,12,0.97)":"rgba(244,245,248,0.97)",backdropFilter:"blur(20px)",zIndex:10,gap:12,flexWrap:"wrap"}}>
+        <div style={{flexShrink:0}}>
+          <div style={{fontSize:9,color:T.muted,letterSpacing:3,textTransform:"uppercase",marginBottom:1}}>{greet()}, {demoMode?"Demo":user?.displayName?.split(" ")[0]||"You"}</div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>✦</div>
+            <h1 style={{fontSize:17,fontWeight:700,margin:0,letterSpacing:-0.5,color:T.text}}>{APP_NAME}</h1>
+            {tab==="habits"&&<div style={{fontSize:10,color:todayPct===100?"#4CAF82":"#9B8FE8",fontWeight:700,background:todayPct===100?"rgba(76,175,130,0.12)":"rgba(155,143,232,0.12)",padding:"3px 8px",borderRadius:6}}>{todayPct}% today</div>}
+          </div>
+        </div>
+
+        <Nav tab={tab} setTab={setTab}/>
+
+        <div style={{display:"flex",gap:7,alignItems:"center",flexShrink:0}}>
+          <button onClick={()=>setShowWrapped(true)} title="Weekly Wrapped" style={{background:"rgba(200,169,110,0.12)",border:"1px solid rgba(200,169,110,0.3)",borderRadius:10,padding:"8px 13px",color:"#C8A96E",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>🎁 Wrapped</button>
+          <button onClick={()=>setShowAI(true)} style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.28)",borderRadius:10,padding:"8px 13px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>✦ AI Coach</button>
+          {tab==="goals"&&<button onClick={()=>{setEditGoal(null);setShowModal(true);}} style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"8px 16px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit",boxShadow:"0 4px 16px rgba(155,143,232,0.25)"}}>+ Goal</button>}
+          {demoMode
+            ? <button onClick={handleGoogleLogin} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 12px",color:"rgba(255,255,255,0.6)",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>Sign in →</button>
+            : <div style={{display:"flex",gap:7,alignItems:"center"}}>
+                {user?.photoURL && <img src={user.photoURL} alt="" style={{width:28,height:28,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.15)",flexShrink:0}}/>}
+                <button onClick={()=>setTab("settings")} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:9,padding:"7px 11px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙</button>
+              </div>
+          }
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div style={{maxWidth:920,margin:"0 auto",padding:"22px 18px"}}>
+        {tab==="goals"&&<GoalsPage goals={goals} setGoals={setGoals} saveGoal={saveGoal} deleteGoal={deleteGoal} toggleSubtask={toggleSubtask} addJournalNote={addJournalNote} setShowAI={setShowAI} setShowModal={setShowModal} setEditGoal={setEditGoal} onImportDemoGoals={!demoMode ? ()=>SEED_GOALS.forEach(g=>saveGoal({...g,id:"import_"+g.id})) : null}/>}
+        {tab==="habits"&&<HabitsPage habits={habits} saveHabit={saveHabit} deleteHabit={deleteHabit} habitLogs={habitLogs} toggleHabitLog={toggleHabitLog} addHabits={addHabits}/>}
+        {tab==="reminders"&&<RemindersPage reminders={reminders} saveReminder={saveReminder} deleteReminder={deleteReminder} toggleReminder={toggleReminder}/>}
+        {tab==="diary"&&<DiaryPage entries={diary} saveEntry={saveDiaryEntry} deleteEntry={deleteDiaryEntry} diaryPin={diaryPin}/>}
+        {tab==="analytics"&&<AnalyticsPage habits={habits} habitLogs={habitLogs} goals={goals} reminders={reminders} diary={diary}/>}
+        {tab==="settings"&&<SettingsPage user={user} demoMode={demoMode} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} diaryPin={diaryPin} setDiaryPin={setDiaryPin}/>}
+      </div>
+
+      {/* Modals */}
+      {showModal&&<SmartModal editGoal={editGoal} onSave={goal=>{
+        const isEdit=!!editGoal; saveGoal(goal); setShowModal(false); setEditGoal(null);
+        if(!isEdit) setSuggestFor(goal);
+      }} onClose={()=>{setShowModal(false);setEditGoal(null);}}/>}
+      {showAI&&<AICoachModal onGoalGenerated={goal=>{ saveGoal(goal); setShowAI(false); setSuggestFor(goal); }} onClose={()=>setShowAI(false)}/>}
+      {suggestFor&&<HabitSuggester goal={suggestFor} existingHabits={habits} onAdd={addHabits} onClose={()=>setSuggestFor(null)}/>}
+      {showWrapped&&<WeeklyWrapped habits={habits} habitLogs={habitLogs} goals={goals} reminders={reminders} diary={diary} onClose={()=>setShowWrapped(false)}/>}
+
+      <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}} * { box-sizing: border-box; }`}</style>
+    </div>
+  );
+}
