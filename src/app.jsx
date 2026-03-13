@@ -92,26 +92,56 @@ function generateDemoLogs(habits) {
 }					
 const mkDate = (daysAgo) => { const d = new Date(); d.setDate(d.getDate()-daysAgo); return d.toISOString().split("T")[0]; };					
 const SEED_REMINDERS = [					
-  { id:"r1", text:"Open a brokerage account on Fidelity", done:false, createdAt:mkDate(30), dueDate:mkDate(-7), category:"financial", aiNote:"Linked to your financial goals around investing." },					
-  { id:"r2", text:"Schedule dentist appointment", done:true, createdAt:mkDate(25), dueDate:mkDate(5), category:"health", aiNote:"Part of maintaining your physical health." },					
-  { id:"r3", text:"Research CrossFit Level 1 certification dates", done:false, createdAt:mkDate(20), dueDate:mkDate(-14), category:"career", aiNote:"Connects to your personal training business goal." },					
-  { id:"r4", text:"Set up automatic $900/month savings transfer", done:true, createdAt:mkDate(18), dueDate:mkDate(10), category:"financial", aiNote:"Directly supports your emergency fund goal." },					
-  { id:"r5", text:"Call mom and catch up", done:false, createdAt:mkDate(14), dueDate:mkDate(1), category:"social", aiNote:"Nurturing important relationships." },					
-  { id:"r6", text:"Register for fall half marathon", done:false, createdAt:mkDate(10), dueDate:mkDate(-3), category:"physical", aiNote:"Aligns with your running performance goals." },					
-  { id:"r7", text:"Write a LinkedIn post about my API migration project", done:false, createdAt:mkDate(7), dueDate:mkDate(2), category:"career", aiNote:"Builds visibility for your promotion goal." },					
-  { id:"r8", text:"Book therapy appointment for next week", done:true, createdAt:mkDate(5), dueDate:mkDate(3), category:"emotional", aiNote:"Supporting your emotional regulation goal." },					
-  { id:"r9", text:"Look into Portugal flights for November", done:false, createdAt:mkDate(3), dueDate:mkDate(10), category:"travel", aiNote:"Related to your solo international travel goal." },					
-  { id:"r10", text:"Review monthly budget — March spending", done:false, createdAt:mkDate(1), dueDate:mkDate(0), category:"financial", aiNote:"Part of your debt elimination strategy." },					
+  { id:"r1",  text:"Open a brokerage account on Fidelity", done:true,  createdAt:mkDate(60), dueDate:mkDate(-7),  category:"financial", aiNote:"Linked to your financial goals around investing." },					
+  { id:"r2",  text:"Schedule dentist appointment", done:true, createdAt:mkDate(55), dueDate:mkDate(5), category:"physical", aiNote:"Part of maintaining your physical health." },					
+  { id:"r3",  text:"Research CrossFit Level 1 certification dates", done:false, createdAt:mkDate(50), dueDate:mkDate(-14), category:"career", aiNote:"Connects to your personal training business goal." },					
+  { id:"r4",  text:"Set up automatic $900/month savings transfer", done:true, createdAt:mkDate(48), dueDate:mkDate(10), category:"financial", aiNote:"Directly supports your emergency fund goal." },					
+  { id:"r5",  text:"Call mom and catch up", done:true, createdAt:mkDate(45), dueDate:mkDate(1), category:"emotional", aiNote:"Nurturing important relationships." },					
+  { id:"r6",  text:"Register for fall half marathon", done:true, createdAt:mkDate(42), dueDate:mkDate(-3), category:"physical", aiNote:"Aligns with your running performance goals." },					
+  { id:"r7",  text:"Write a LinkedIn post about my API migration project", done:false, createdAt:mkDate(40), dueDate:mkDate(2), category:"career", aiNote:"Builds visibility for your promotion goal." },					
+  { id:"r8",  text:"Book therapy appointment for next week", done:true, createdAt:mkDate(38), dueDate:mkDate(3), category:"emotional", aiNote:"Supporting your emotional regulation goal." },					
+  { id:"r9",  text:"Look into Portugal flights for November", done:false, createdAt:mkDate(35), dueDate:mkDate(10), category:"travel", aiNote:"Related to your solo international travel goal." },					
+  { id:"r10", text:"Review monthly budget — March spending", done:true, createdAt:mkDate(33), dueDate:mkDate(0), category:"financial", aiNote:"Part of your debt elimination strategy." },					
+  { id:"r11", text:"Buy new running shoes — current ones are 400+ miles", done:true, createdAt:mkDate(30), dueDate:mkDate(-5), category:"physical", aiNote:"Equipment maintenance for your marathon training." },					
+  { id:"r12", text:"Email Patrick Graziosi about rotation interest", done:true, createdAt:mkDate(28), dueDate:mkDate(-2), category:"career", aiNote:"Key networking action for your LDP rotation goal." },					
+  { id:"r13", text:"Set up creatine loading protocol — start week 1", done:true, createdAt:mkDate(26), dueDate:mkDate(-20), category:"physical", aiNote:"Supports your strength and muscle building goal." },					
+  { id:"r14", text:"Cancel unused gym streaming subscription", done:true, createdAt:mkDate(24), dueDate:mkDate(-15), category:"financial", aiNote:"Budget optimization — freeing up savings capacity." },					
+  { id:"r15", text:"Read Atomic Habits — finish this week", done:true, createdAt:mkDate(22), dueDate:mkDate(-10), category:"lifestyle", aiNote:"Supports your reading goal and habit formation." },					
+  { id:"r16", text:"Schedule 1:1 with Scott Cunningham — Decision Science", done:false, createdAt:mkDate(20), dueDate:mkDate(5), category:"career", aiNote:"Critical networking step for rotation placement." },					
+  { id:"r17", text:"Take progress photos — month 2 check-in", done:false, createdAt:mkDate(18), dueDate:mkDate(3), category:"physical", aiNote:"Part of your measurable muscle gain tracking." },					
+  { id:"r18", text:"Research Roth vs Traditional 401k implications", done:false, createdAt:mkDate(15), dueDate:mkDate(7), category:"financial", aiNote:"Key decision for your investment property strategy." },					
+  { id:"r19", text:"Plan phone-free activity with Sebastian for Saturday", done:true, createdAt:mkDate(12), dueDate:mkDate(-2), category:"parenting", aiNote:"Directly tied to your parenting connection goal." },					
+  { id:"r20", text:"Attend Catholic Mass — explore faith practice", done:false, createdAt:mkDate(10), dueDate:mkDate(6), category:"religious", aiNote:"Part of your faith exploration goal." },					
+  { id:"r21", text:"Buy Tupperware set for meal prep", done:true, createdAt:mkDate(9), dueDate:mkDate(-8), category:"physical", aiNote:"Infrastructure for your nutrition consistency goal." },					
+  { id:"r22", text:"Update resume with Jenkins pipeline and Terraform work", done:false, createdAt:mkDate(7), dueDate:mkDate(10), category:"career", aiNote:"Portfolio documentation for rotation interviews." },					
+  { id:"r23", text:"Book Florida trip — April 7-14 with Sebastian", done:true, createdAt:mkDate(6), dueDate:mkDate(-30), category:"parenting", aiNote:"Milestone trip to create memories with your son." },					
+  { id:"r24", text:"Start The Bible Project YouTube series", done:false, createdAt:mkDate(4), dueDate:mkDate(14), category:"religious", aiNote:"First action item for your faith education goal." },					
+  { id:"r25", text:"Get barber appointment — establish consistent schedule", done:true, createdAt:mkDate(3), dueDate:mkDate(-1), category:"lifestyle", aiNote:"Part of your grooming and style routine goal." },					
+  { id:"r26", text:"Log all lifts this week in training journal", done:false, createdAt:mkDate(2), dueDate:mkDate(1), category:"physical", aiNote:"Measurability component of your strength PR goals." },					
+  { id:"r27", text:"Review 401k portal — check current balance", done:false, createdAt:mkDate(1), dueDate:mkDate(3), category:"financial", aiNote:"First step in your investment property action plan." },					
+  { id:"r28", text:"Text Jake about informal chat on Decision Science team", done:false, createdAt:mkDate(0), dueDate:mkDate(2), category:"career", aiNote:"Warm outreach to support rotation networking." },					
 ];					
 const SEED_DIARY = [					
-  { id:"d1", text:"Had an incredible long run today — 10 miles, negative splits the whole way. Six months ago I couldn't sustain this pace for 3 miles. The marathon training is working. My legs are sore but my mind is clear in a way that only running gives me. I've been thinking a lot about what it means to be consistent vs. being motivated. Motivation fades. Consistency is the whole game.", categories:["physical","emotional"], mood:"great", wordCount:78, createdAt:mkDate(45)+"T09:00:00.000Z" },					
-  { id:"d2", text:"Therapy session today hit different. We talked about how I use achievement as armor — always chasing the next goal so I don't have to sit with the discomfort of the present. There's something real there. I genuinely love building and growing, but I need to make sure I'm also present. Sebastian asked me last night why I was on my phone during dinner. That one hurt.", categories:["emotional","parenting"], mood:"reflective", wordCount:82, createdAt:mkDate(38)+"T21:00:00.000Z" },					
-  { id:"d3", text:"First paying client for the freelance work. $950 deposit hit my account today. I've built websites for people for free for three years. The number didn't change. The belief did. Charged what I was worth and they said yes without hesitation. The only thing that was ever in the way was me.", categories:["career","financial"], mood:"great", wordCount:55, createdAt:mkDate(30)+"T19:00:00.000Z" },					
-  { id:"d4", text:"Rough week. Missed three workouts, blew my nutrition Thursday through Saturday, and spent way too much time doomscrolling. I'm not going to pretend it didn't happen or spin it into some lesson. Sometimes you just have an off week. The goal is to not let it become two.", categories:["physical","emotional"], mood:"low", wordCount:52, createdAt:mkDate(22)+"T22:00:00.000Z" },					
-  { id:"d5", text:"Read The Psychology of Money cover to cover this weekend. The concept of 'reasonable vs rational' is going to stick with me for a long time. Being financially reasonable — making decisions you can stick to — matters more than being theoretically optimal. Applied this to my savings plan immediately. Moved from trying to maximize returns to just automating consistency.", categories:["financial","lifestyle"], mood:"good", wordCount:68, createdAt:mkDate(16)+"T16:00:00.000Z" },					
-  { id:"d6", text:"Sebastian and I went to the farmers market this morning. No phones. Just us. He held my hand and asked me what my favorite fruit was and we argued about it for twenty minutes. These are the moments I want to protect. Not the races or the PRs or the promotions. This.", categories:["parenting","emotional"], mood:"great", wordCount:56, createdAt:mkDate(10)+"T11:00:00.000Z" },					
-  { id:"d7", text:"Manager pulled me aside after the sprint review today. Said my API migration work was 'exactly the kind of ownership we need at senior level.' Didn't know how to respond. Just said thank you. Later I thought: this is what happens when you stop waiting to be noticed and just do the work loudly on purpose.", categories:["career"], mood:"good", wordCount:58, createdAt:mkDate(6)+"T18:00:00.000Z" },					
-  { id:"d8", text:"Something strange happened during my meditation today — for about 90 seconds I genuinely had no internal monologue. Just breath and quiet. I've been meditating on and off for two years and that's never happened. Maybe consistency is finally paying off in ways I can't track on a spreadsheet.", categories:["emotional","lifestyle"], mood:"good", wordCount:57, createdAt:mkDate(2)+"T08:30:00.000Z" },					
+  { id:"d1",  text:"Had an incredible long run today — 10 miles, negative splits the whole way. Six months ago I couldn't sustain this pace for 3 miles. The marathon training is working. My legs are sore but my mind is clear in a way that only running gives me. I've been thinking a lot about what it means to be consistent vs. being motivated. Motivation fades. Consistency is the whole game.", categories:["physical","emotional"], mood:"great", wordCount:78, createdAt:mkDate(75)+"T09:00:00.000Z" },					
+  { id:"d2",  text:"Therapy session today hit different. We talked about how I use achievement as armor — always chasing the next goal so I don't have to sit with the discomfort of the present. There's something real there. I genuinely love building and growing, but I need to make sure I'm also present. Sebastian asked me last night why I was on my phone during dinner. That one hurt.", categories:["emotional","parenting"], mood:"reflective", wordCount:82, createdAt:mkDate(70)+"T21:00:00.000Z" },					
+  { id:"d3",  text:"First paying client for the freelance work. $950 deposit hit my account today. I've built websites for people for free for three years. The number didn't change. The belief did. Charged what I was worth and they said yes without hesitation. The only thing that was ever in the way was me.", categories:["career","financial"], mood:"great", wordCount:55, createdAt:mkDate(65)+"T19:00:00.000Z" },					
+  { id:"d4",  text:"Rough week. Missed three workouts, blew my nutrition Thursday through Saturday, and spent way too much time doomscrolling. I'm not going to pretend it didn't happen or spin it into some lesson. Sometimes you just have an off week. The goal is to not let it become two.", categories:["physical","emotional"], mood:"low", wordCount:52, createdAt:mkDate(60)+"T22:00:00.000Z" },					
+  { id:"d5",  text:"Read The Psychology of Money cover to cover this weekend. The concept of reasonable vs rational is going to stick with me for a long time. Being financially reasonable — making decisions you can stick to — matters more than being theoretically optimal. Applied this to my savings plan immediately. Moved from trying to maximize returns to just automating consistency.", categories:["financial","lifestyle"], mood:"good", wordCount:68, createdAt:mkDate(55)+"T16:00:00.000Z" },					
+  { id:"d6",  text:"Sebastian and I went to the farmers market this morning. No phones. Just us. He held my hand and asked me what his favorite fruit was and we argued about it for twenty minutes. These are the moments I want to protect. Not the races or the PRs or the promotions. This.", categories:["parenting","emotional"], mood:"great", wordCount:56, createdAt:mkDate(50)+"T11:00:00.000Z" },					
+  { id:"d7",  text:"Manager pulled me aside after the sprint review today. Said my API migration work was exactly the kind of ownership we need at senior level. Did not know how to respond. Just said thank you. Later I thought: this is what happens when you stop waiting to be noticed and just do the work loudly on purpose.", categories:["career"], mood:"good", wordCount:58, createdAt:mkDate(46)+"T18:00:00.000Z" },					
+  { id:"d8",  text:"Something strange happened during my meditation today — for about 90 seconds I genuinely had no internal monologue. Just breath and quiet. I've been meditating on and off for two years and that has never happened. Maybe consistency is finally paying off in ways I cannot track on a spreadsheet.", categories:["emotional","lifestyle"], mood:"good", wordCount:57, createdAt:mkDate(42)+"T08:30:00.000Z" },					
+  { id:"d9",  text:"Weighed in at 147.2 lbs this morning. Up almost 3 lbs from where I started. The creatine is doing its thing but more importantly the eating is consistent. Meal prepping on Sunday changed everything. I am not just eating more — I am eating intentionally. The hang clean felt stronger today too. 195 moved like 185 used to.", categories:["physical"], mood:"great", wordCount:65, createdAt:mkDate(38)+"T07:15:00.000Z" },					
+  { id:"d10", text:"Had a hard conversation with my mom today. She is worried I am doing too much — working, training, the app, networking, parenting. Maybe she is right. But the alternative is doing nothing and waiting. I have spent too long waiting. I told her that. She did not fully understand but she said she was proud of me. That hit different.", categories:["emotional","parenting"], mood:"reflective", wordCount:72, createdAt:mkDate(34)+"T20:00:00.000Z" },					
+  { id:"d11", text:"Deployed the Life Dashboard app today. Something I genuinely built from scratch. React, Firebase, Vercel, Claude API — I did not know any of this four months ago. The feeling of opening a URL you built and seeing it work is something I cannot describe. This is what I have been missing at work. Tangible things.", categories:["career","lifestyle"], mood:"great", wordCount:63, createdAt:mkDate(30)+"T22:00:00.000Z" },					
+  { id:"d12", text:"Missed therapy this week. Schedule conflict that I let slide too easily. I noticed I was more reactive with Sebastian by Thursday — shorter fuse, less patience. The data is clear even without a spreadsheet. The weeks I skip therapy are harder weeks across the board.", categories:["emotional","parenting"], mood:"neutral", wordCount:49, createdAt:mkDate(26)+"T21:30:00.000Z" },					
+  { id:"d13", text:"Looked into the 401k loan option today. More complicated than I thought but also more doable. If I keep contributing consistently for 14 more months I will have enough vested to take the loan without penalty. My older friend laid it out clearly. The path exists. I just have to stay disciplined.", categories:["financial"], mood:"good", wordCount:60, createdAt:mkDate(22)+"T19:00:00.000Z" },					
+  { id:"d14", text:"Long run this morning — 14 miles. Hit a wall at mile 11 that I genuinely thought would end me. Walked for 90 seconds. Got back. Finished. There is something about finishing when you want to quit that changes how you think about quitting in the rest of your life. I do not think that lesson ever stops being true.", categories:["physical","emotional"], mood:"great", wordCount:71, createdAt:mkDate(18)+"T08:00:00.000Z" },					
+  { id:"d15", text:"Watched The Bible Project intro series on the subway today. Actually could not stop. The way they explain the narrative arc of scripture visually — I finally understand what I grew up hearing in Spanish but never fully grasped. Faith that I chose feels completely different from faith I inherited.", categories:["religious","emotional"], mood:"reflective", wordCount:61, createdAt:mkDate(14)+"T12:00:00.000Z" },					
+  { id:"d16", text:"Bad day. Nothing specific, just that heavy feeling where everything feels harder than it should. Did not work out. Ate badly. Stared at my phone too long. The old version of me would have spiraled. The current version of me is writing this down instead. Small wins.", categories:["emotional"], mood:"low", wordCount:47, createdAt:mkDate(10)+"T23:00:00.000Z" },					
+  { id:"d17", text:"Had coffee with a senior engineer from Decision Science today. Patrick set it up. The work they do is genuinely exciting — building models that inform real business decisions with real stakes. I came in with three questions and left with twelve more. This is the rotation I want.", categories:["career"], mood:"great", wordCount:59, createdAt:mkDate(7)+"T17:30:00.000Z" },					
+  { id:"d18", text:"Sebastian told me I was his best friend today. We were driving back from the park and he just said it unprompted. I had to pull over for a second. All the guilt about the phone, the yelling, the hard weeks — it does not disappear but it shrinks next to a moment like that.", categories:["parenting","emotional"], mood:"great", wordCount:66, createdAt:mkDate(4)+"T20:00:00.000Z" },					
+  { id:"d19", text:"Strength training PR today. Hit 205 on the hang clean. That is 20 lbs over where I started this block. The shoulder work is paying off. Coach at the gym noticed and called it out in front of the class. Felt embarrassed and proud at the same time. The body adapts when you show up consistently. Every time.", categories:["physical"], mood:"great", wordCount:62, createdAt:mkDate(2)+"T18:00:00.000Z" },					
+  { id:"d20", text:"Sitting with a question tonight: what does enough look like? I set all these goals — strength, money, career, the app, the certification. Sometimes I wonder if I am running toward something or away from something. Therapy would say both can be true. I think both are true.", categories:["emotional","lifestyle"], mood:"reflective", wordCount:55, createdAt:mkDate(0)+"T22:30:00.000Z" },					
 ];					
 const SEED_GOALS = [					
   { id:"g1", category:"physical", priority:"High", title:"Run my first marathon under 4 hours",					
@@ -329,66 +359,242 @@ function AICoachModal({ onClose, onGoalGenerated }) {
     { id:"emotional", label:"Emotional", icon:"◐",  color:"#E87AAF" },					
     { id:"travel",    label:"Travel",    icon:"⊕",  color:"#5AC8C8" },					
   ];					
-  const [msgs, setMsgs] = useState([{role:"assistant",content:"Hey! I am your SMART Goal Coach ✦\n\nDescribe a goal you are thinking about — as vague or specific as you want. I will ask the right questions and build you a complete SMART goal ready for your dashboard."}]);					
+  const T2 = { border:"rgba(255,255,255,0.07)", muted:"rgba(255,255,255,0.38)" };					
+  // ── Mode: "chat" (one goal at a time) or "bulk" (paste text → many goals) ──					
+  const [mode, setMode] = useState("chat");					
+  // ── Chat mode state ──					
+  const [msgs, setMsgs] = useState([{role:"assistant",content:"Hey! I am your SMART Goal Coach ✦\n\nDescribe a goal you are thinking about — as vague or specific as you want. I will ask the right questions and build you a complete SMART goal ready for your dashboard.\n\nOr switch to Bulk Import above to paste a block of text and I will extract all your goals at once."}]);					
   const [input, setInput] = useState("");					
   const [loading, setLoading] = useState(false);					
   const [pending, setPending] = useState(null);					
   const bottomRef = useRef(null);					
-  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[msgs,loading]);					
-  const SYSTEM = `You are a SMART Goal Coach inside a personal goal tracking app. Help the user define a SMART goal through natural conversation. Categories: physical, financial, religious, parenting, career, lifestyle, emotional, travel. When ready output:					
+  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs,loading]);					
+  // ── Bulk mode state ──					
+  const [bulkText, setBulkText] = useState("");					
+  const [bulkLoading, setBulkLoading] = useState(false);					
+  const [bulkGoals, setBulkGoals] = useState([]);  // array of parsed goals					
+  const [bulkSelected, setBulkSelected] = useState({});					
+  const [bulkDone, setBulkDone] = useState(false);					
+  // ── Chat mode: send one message ──					
+  const CHAT_SYSTEM = `You are a SMART Goal Coach inside a personal goal tracking app. Help the user define a SMART goal through natural conversation. Categories: physical, financial, religious, parenting, career, lifestyle, emotional, travel. When ready output:					
 <GOAL_JSON>{"title":"...","category":"physical","priority":"High","specific":"...","measurable":"...","achievable":"...","relevant":"...","timebound":"YYYY-MM-DD","subtasks":["..."]}</GOAL_JSON>					
 Be direct, warm, motivating.`;					
-  const send = async () => {					
-    if (!input.trim()||loading) return;					
-    const nm = [...msgs,{role:"user",content:input.trim()}];					
+  const sendChat = async () => {					
+    if (!input.trim() || loading) return;					
+    const nm = [...msgs, {role:"user", content:input.trim()}];					
     setMsgs(nm); setInput(""); setLoading(true);					
     try {					
-      const text = await callClaude(nm.map(m=>m.role+": "+m.content).join("\n"), SYSTEM, 1000);					
+      const text = await callClaude(nm.map(m=>m.role+": "+m.content).join("\n"), CHAT_SYSTEM, 1000);					
       const match = text.match(/<GOAL_JSON>([\s\S]*?)<\/GOAL_JSON>/);					
-      if (match) { try { const raw=JSON.parse(match[1].trim()); setPending({id:Date.now().toString(),...raw,category:raw.category?.toLowerCase()||"physical",subtasks:(raw.subtasks||[]).map((s,i)=>({id:`ai${Date.now()}${i}`,label:s,done:false})),journal:[],createdAt:todayStr()}); } catch(e){} }					
+      if (match) {					
+        try {					
+          const raw = JSON.parse(match[1].trim());					
+          setPending({ id:Date.now().toString(), ...raw, category:raw.category?.toLowerCase()||"physical",					
+            subtasks:(raw.subtasks||[]).map((s,i)=>({id:`ai${Date.now()}${i}`,label:s,done:false})),					
+            journal:[], createdAt:todayStr() });					
+        } catch(e) {}					
+      }					
       setMsgs(prev=>[...prev,{role:"assistant",content:text.replace(/<GOAL_JSON>[\s\S]*?<\/GOAL_JSON>/g,"").trim()}]);					
-    } catch(e) { setMsgs(prev=>[...prev,{role:"assistant",content:"Connection error. Try again."}]); }					
+    } catch(e) { setMsgs(prev=>[...prev,{role:"assistant",content:"Connection error. Check that the AI is configured and try again."}]); }					
     setLoading(false);					
   };					
+  // ── Bulk mode: extract all goals from pasted text ──					
+  const BULK_SYSTEM = `You are a SMART Goal extractor. The user will paste raw text describing their life goals — notes, journal entries, voice transcriptions, anything. Extract every distinct goal you can identify and return them as a JSON array.					
+Rules:					
+- Extract as many meaningful goals as the text contains. Be thorough.					
+- Each goal must be fully SMART (Specific, Measurable, Achievable, Relevant, Time-bound)					
+- Make deadlines realistic based on context clues. Default to end of current year if unclear.					
+#NAME?					
+- Priority: High, Medium, or Low					
+- Each goal needs 4-6 specific, actionable subtasks					
+- Do NOT output anything except the JSON array — no preamble, no explanation					
+Output format (JSON array only):					
+[					
+  {					
+    "title": "Short action-oriented title",					
+    "category": "physical",					
+    "priority": "High",					
+    "specific": "...",					
+    "measurable": "...",					
+    "achievable": "...",					
+    "relevant": "...",					
+    "timebound": "YYYY-MM-DD",					
+    "subtasks": ["Subtask 1", "Subtask 2", "Subtask 3", "Subtask 4", "Subtask 5"]					
+  }					
+]`;					
+  const runBulkExtract = async () => {					
+    if (!bulkText.trim() || bulkLoading) return;					
+    setBulkLoading(true);					
+    setBulkGoals([]);					
+    setBulkSelected({});					
+    setBulkDone(false);					
+    try {					
+      const prompt = `Extract all SMART goals from this text. Be thorough — find every goal, aspiration, or intention mentioned:\n\n${bulkText}`;					
+      const text = await callClaude(prompt, BULK_SYSTEM, 3000);					
+      const clean = text.replace(/\`\`\`json|\`\`\`/g, "").trim();					
+      const parsed = JSON.parse(clean);					
+      const withIds = parsed.map((g, i) => ({					
+        ...g,					
+        id: `bulk_${Date.now()}_${i}`,					
+        category: g.category?.toLowerCase() || "physical",					
+        subtasks: (g.subtasks || []).map((s, j) => ({ id:`bs${Date.now()}${i}${j}`, label:s, done:false })),					
+        journal: [],					
+        createdAt: todayStr(),					
+      }));					
+      setBulkGoals(withIds);					
+      // Select all by default					
+      const sel = {};					
+      withIds.forEach(g => { sel[g.id] = true; });					
+      setBulkSelected(sel);					
+    } catch(e) {					
+      setBulkGoals([{ id:"err", title:"Could not parse goals — try again", category:"physical", priority:"Medium", specific:"", measurable:"", achievable:"", relevant:"", timebound:"", subtasks:[], journal:[], createdAt:todayStr() }]);					
+    }					
+    setBulkLoading(false);					
+  };					
+  const toggleBulkGoal = (id) => setBulkSelected(s => ({...s, [id]: !s[id]}));					
+  const addSelectedGoals = () => {					
+    bulkGoals.filter(g => bulkSelected[g.id]).forEach(g => onGoalGenerated(g));					
+    setBulkDone(true);					
+    setTimeout(() => onClose(), 1200);					
+  };					
+  const selectedCount = Object.values(bulkSelected).filter(Boolean).length;					
   const cat = pending ? (CATS.find(c=>c.id===pending.category)||CATS[0]) : null;					
-  const T2 = {border:"rgba(255,255,255,0.07)",muted:"rgba(255,255,255,0.38)"};					
   return (					
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(14px)"}}>					
-      <div style={{background:"#0D0F14",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,width:"min(580px,96vw)",height:"min(680px,90vh)",display:"flex",flexDirection:"column",overflow:"hidden"}}>					
-        <div style={{padding:"18px 22px",borderBottom:`1px solid ${T2.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>					
+      <div style={{background:"#0D0F14",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,width:"min(620px,96vw)",height:"min(720px,92vh)",display:"flex",flexDirection:"column",overflow:"hidden"}}>					
+        {/* Header */}					
+        <div style={{padding:"16px 22px",borderBottom:`1px solid ${T2.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>					
           <div style={{display:"flex",alignItems:"center",gap:12}}>					
             <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#9B8FE8,#E87AAF)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>✦</div>					
-            <div><div style={{fontWeight:700,color:"#fff",fontSize:14}}>SMART Goal Coach</div><div style={{fontSize:10,color:T2.muted,letterSpacing:1}}>POWERED BY AI</div></div>					
+            <div>					
+              <div style={{fontWeight:700,color:"#fff",fontSize:14}}>SMART Goal Coach</div>					
+              <div style={{fontSize:10,color:T2.muted,letterSpacing:1}}>POWERED BY AI</div>					
+            </div>					
           </div>					
-          <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:8,padding:"7px 14px",color:T2.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>					
+          {/* Mode toggle */}					
+          <div style={{display:"flex",background:"rgba(255,255,255,0.06)",borderRadius:10,padding:3,gap:3}}>					
+            {[["chat","💬 Chat"],["bulk","📋 Bulk Import"]].map(([m,label])=>(					
+              <button key={m} onClick={()=>setMode(m)}					
+                style={{padding:"6px 14px",borderRadius:8,border:"none",background:mode===m?"#9B8FE8":"transparent",color:mode===m?"#fff":T2.muted,cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",transition:"all 0.2s"}}>					
+                {label}					
+              </button>					
+            ))}					
+          </div>					
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:8,padding:"7px 14px",color:T2.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit",flexShrink:0}}>✕</button>					
         </div>					
-        <div style={{flex:1,overflowY:"auto",padding:"18px 22px",display:"flex",flexDirection:"column",gap:12}}>					
-          {msgs.map((m,i)=>(					
-            <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>					
-              <div style={{maxWidth:"83%",padding:"12px 15px",borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.role==="user"?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.05)",color:"#fff",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap",border:m.role==="assistant"?`1px solid ${T2.border}`:"none"}}>{m.content}</div>					
+        {/* ── CHAT MODE ── */}					
+        {mode === "chat" && (					
+          <>					
+            <div style={{flex:1,overflowY:"auto",padding:"18px 22px",display:"flex",flexDirection:"column",gap:12}}>					
+              {msgs.map((m,i)=>(					
+                <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>					
+                  <div style={{maxWidth:"83%",padding:"12px 15px",borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.role==="user"?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.05)",color:"#fff",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap",border:m.role==="assistant"?`1px solid ${T2.border}`:"none"}}>{m.content}</div>					
+                </div>					
+              ))}					
+              {loading&&<div style={{display:"flex"}}><div style={{padding:"12px 16px",borderRadius:"16px 16px 16px 4px",background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,display:"flex",gap:5,alignItems:"center"}}>{[0,1,2].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",background:"rgba(155,143,232,0.8)",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div></div>}					
+              {pending&&cat&&(					
+                <div style={{background:`${cat.color}12`,border:`1px solid ${cat.color}44`,borderRadius:14,padding:16}}>					
+                  <div style={{fontSize:10,color:cat.color,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>✓ Goal Ready to Add</div>					
+                  <div style={{fontWeight:700,color:"#fff",fontSize:14,marginBottom:3}}>{pending.title}</div>					
+                  <div style={{fontSize:11,color:T2.muted,marginBottom:12}}>{cat.icon} {cat.label} · {pending.priority} · Due {pending.timebound}</div>					
+                  <div style={{display:"flex",gap:8}}>					
+                    <button onClick={()=>{onGoalGenerated(pending);setPending(null);setMsgs(prev=>[...prev,{role:"assistant",content:"Done! Goal added to your dashboard. Want to create another one?"}]);}} style={{flex:1,background:cat.color,border:"none",borderRadius:10,padding:"11px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Add to Dashboard →</button>					
+                    <button onClick={()=>setPending(null)} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:10,padding:"11px 14px",color:T2.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Keep chatting</button>					
+                  </div>					
+                </div>					
+              )}					
+              <div ref={bottomRef}/>					
             </div>					
-          ))}					
-          {loading && <div style={{display:"flex"}}><div style={{padding:"12px 16px",borderRadius:"16px 16px 16px 4px",background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,display:"flex",gap:5,alignItems:"center"}}>{[0,1,2].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",background:"rgba(155,143,232,0.8)",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div></div>}					
-          {pending&&cat&&(					
-            <div style={{background:`${cat.color}12`,border:`1px solid ${cat.color}44`,borderRadius:14,padding:16}}>					
-              <div style={{fontSize:10,color:cat.color,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>✓ Goal Ready to Add</div>					
-              <div style={{fontWeight:700,color:"#fff",fontSize:14,marginBottom:3}}>{pending.title}</div>					
-              <div style={{fontSize:11,color:T2.muted,marginBottom:12}}>{cat.icon} {cat.label} · {pending.priority} · Due {pending.timebound}</div>					
-              <div style={{display:"flex",gap:8}}>					
-                <button onClick={()=>{onGoalGenerated(pending);onClose();}} style={{flex:1,background:cat.color,border:"none",borderRadius:10,padding:"11px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Add to Dashboard →</button>					
-                <button onClick={()=>setPending(null)} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:10,padding:"11px 14px",color:T2.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Keep chatting</button>					
+            <div style={{padding:"14px 22px",borderTop:`1px solid ${T2.border}`,display:"flex",gap:10}}>					
+              <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&sendChat()} placeholder="Describe a goal you want to work toward..."					
+                style={{flex:1,background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"12px 15px",color:"#fff",fontSize:13,outline:"none",fontFamily:"inherit"}}/>					
+              <button onClick={sendChat} disabled={loading||!input.trim()} style={{background:input.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"0 20px",color:input.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:input.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Send</button>					
+            </div>					
+          </>					
+        )}					
+        {/* ── BULK IMPORT MODE ── */}					
+        {mode === "bulk" && (					
+          <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>					
+            {bulkGoals.length === 0 ? (					
+              /* Step 1: paste text */					
+              <div style={{flex:1,display:"flex",flexDirection:"column",padding:"20px 22px",gap:14}}>					
+                <div>					
+                  <div style={{fontSize:13,fontWeight:700,color:"#fff",marginBottom:4}}>Paste anything — I will find your goals</div>					
+                  <p style={{fontSize:12,color:T2.muted,margin:0,lineHeight:1.6}}>Paste notes, journal entries, voice transcriptions, or anything describing what you want to achieve. The AI will extract every goal, make it SMART, and let you review before adding.</p>					
+                </div>					
+                <textarea value={bulkText} onChange={e=>setBulkText(e.target.value)}					
+                  placeholder={"Examples:\n• Your GOALS.txt file\n• A brain dump of things you want to accomplish\n• A journal entry about your aspirations\n• Notes from a therapy session\n• A voice-to-text recording of your thoughts\n\nPaste it all — the messier the better."}					
+                  style={{flex:1,background:"rgba(255,255,255,0.04)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"14px 16px",color:"#fff",fontSize:13,outline:"none",resize:"none",fontFamily:"inherit",lineHeight:1.6}}/>					
+                <button onClick={runBulkExtract} disabled={bulkLoading||!bulkText.trim()}					
+                  style={{background:bulkText.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"14px",color:bulkText.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:bulkText.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:14,fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>					
+                  {bulkLoading					
+                    ? <><div style={{display:"flex",gap:5}}>{[0,1,2].map(i=><div key={i} style={{width:7,height:7,borderRadius:"50%",background:"rgba(255,255,255,0.8)",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div> Extracting goals...</>					
+                    : "✦ Extract My Goals"}					
+                </button>					
               </div>					
-            </div>					
-          )}					
-          <div ref={bottomRef}/>					
-        </div>					
-        <div style={{padding:"14px 22px",borderTop:`1px solid ${T2.border}`,display:"flex",gap:10}}>					
-          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&send()} placeholder="Describe a goal you want to work toward..."					
-            style={{flex:1,background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"12px 15px",color:"#fff",fontSize:13,outline:"none",fontFamily:"inherit"}}/>					
-          <button onClick={send} disabled={loading||!input.trim()} style={{background:input.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"0 20px",color:input.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:input.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Send</button>					
-        </div>					
+            ) : bulkDone ? (					
+              /* Done state */					
+              <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12}}>					
+                <div style={{fontSize:40}}>🎉</div>					
+                <div style={{fontSize:18,fontWeight:700,color:"#fff"}}>{selectedCount} goal{selectedCount!==1?"s":""} added!</div>					
+                <p style={{fontSize:13,color:T2.muted,textAlign:"center"}}>Head to your Goals tab to review and edit them.</p>					
+              </div>					
+            ) : (					
+              /* Step 2: review extracted goals */					
+              <>					
+                <div style={{padding:"14px 22px",borderBottom:`1px solid ${T2.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>					
+                  <div>					
+                    <div style={{fontSize:13,fontWeight:700,color:"#fff"}}>Found {bulkGoals.length} goals</div>					
+                    <div style={{fontSize:11,color:T2.muted}}>Deselect any you don't want, then add all at once</div>					
+                  </div>					
+                  <div style={{display:"flex",gap:8}}>					
+                    <button onClick={()=>{setBulkGoals([]);setBulkText("");}} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:9,padding:"8px 14px",color:T2.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>← Start over</button>					
+                    <button onClick={addSelectedGoals} disabled={selectedCount===0}					
+                      style={{background:selectedCount>0?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:9,padding:"8px 18px",color:selectedCount>0?"#fff":"rgba(255,255,255,0.2)",cursor:selectedCount>0?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>					
+                      Add {selectedCount} Goal{selectedCount!==1?"s":""} →					
+                    </button>					
+                  </div>					
+                </div>					
+                <div style={{flex:1,overflowY:"auto",padding:"14px 22px",display:"flex",flexDirection:"column",gap:10}}>					
+                  {bulkGoals.map(g => {					
+                    const on = !!bulkSelected[g.id];					
+                    const c = CATS.find(x=>x.id===g.category)||CATS[0];					
+                    return (					
+                      <div key={g.id} onClick={()=>toggleBulkGoal(g.id)}					
+                        style={{background:on?`${c.color}0E`:"rgba(255,255,255,0.02)",border:`1.5px solid ${on?c.color+"55":T2.border}`,borderRadius:13,padding:"14px 16px",cursor:"pointer",transition:"all 0.2s"}}>					
+                        <div style={{display:"flex",alignItems:"flex-start",gap:12}}>					
+                          {/* Checkbox */}					
+                          <div style={{width:20,height:20,borderRadius:6,border:`2px solid ${on?c.color:"rgba(255,255,255,0.2)"}`,background:on?c.color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:2,transition:"all 0.2s"}}>					
+                            {on&&<span style={{color:"#fff",fontSize:11,fontWeight:800}}>✓</span>}					
+                          </div>					
+                          <div style={{flex:1,minWidth:0}}>					
+                            <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:4,flexWrap:"wrap"}}>					
+                              <span style={{fontSize:10,background:`${c.color}20`,color:c.color,padding:"2px 8px",borderRadius:20,fontWeight:700}}>{c.icon} {c.label}</span>					
+                              <span style={{fontSize:10,color:g.priority==="High"?"#E8645A":g.priority==="Medium"?"#C8A96E":"#4CAF82",fontWeight:600}}>{g.priority}</span>					
+                              <span style={{fontSize:10,color:"rgba(255,255,255,0.25)"}}>Due {g.timebound}</span>					
+                            </div>					
+                            <div style={{fontSize:13,fontWeight:700,color:"#fff",marginBottom:6}}>{g.title}</div>					
+                            <div style={{fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.4,marginBottom:6}}>{g.specific}</div>					
+                            {g.subtasks.length>0&&(					
+                              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>					
+                                {g.subtasks.slice(0,3).map((s,i)=>(					
+                                  <span key={i} style={{fontSize:10,background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.45)",padding:"2px 8px",borderRadius:20}}>→ {s.label||s}</span>					
+                                ))}					
+                                {g.subtasks.length>3&&<span style={{fontSize:10,color:"rgba(255,255,255,0.25)",padding:"2px 6px"}}>+{g.subtasks.length-3} more</span>}					
+                              </div>					
+                            )}					
+                          </div>					
+                        </div>					
+                      </div>					
+                    );					
+                  })}					
+                </div>					
+              </>					
+            )}					
+          </div>					
+        )}					
+        <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>					
       </div>					
-      <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>					
     </div>					
   );					
 }					
@@ -803,7 +1009,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
 }					
 // ─── ANALYTICS PAGE ───────────────────────────────────────────────────────────					
 function AnalyticsPage({ habits, habitLogs, goals }) {					
-  const [analyticsTab, setAnalyticsTab] = useState("habits");					
+  const [analyticsTab, setAnalyticsTab] = useState("goals");					
   const [aiInsight, setAiInsight] = useState("");					
   const [aiLoading, setAiLoading] = useState(false);					
   const [period, setPeriod] = useState("month");					
@@ -915,7 +1121,7 @@ function AnalyticsPage({ habits, habitLogs, goals }) {
     <div>					
       {/* Analytics Tab Toggle */}					
       <div style={{display:"flex",background:T.surface,borderRadius:14,padding:4,border:`1px solid ${T.border}`,marginBottom:20,width:"fit-content"}}>					
-        {[["habits","✦ Habits"],["goals","◎ Goals"]].map(([id,label])=>(					
+        {[["goals","◎ Goals"],["habits","✦ Habits"],["reminders","🔔 Reminders"],["journal","📓 Journal"]].map(([id,label])=>(					
           <button key={id} onClick={()=>setAnalyticsTab(id)}					
             style={{padding:"9px 28px",borderRadius:11,border:"none",background:analyticsTab===id?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"transparent",color:analyticsTab===id?"#fff":T.muted,cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit",transition:"all 0.2s"}}>					
             {label}					
