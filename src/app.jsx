@@ -59,13 +59,10 @@ const calcProgress = g => { const t=g.subtasks.length,d=g.subtasks.filter(s=>s.d
 const daysLeft = tb => tb ? Math.ceil((new Date(tb)-new Date())/86400000) : null;					
 const fmtDate = d => new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});					
 function callClaude(prompt, systemPrompt, maxTokens=600) {					
-  return fetch("https://api.anthropic.com/v1/messages", {					
+  return fetch("/api/claude", {					
     method:"POST", headers:{"Content-Type":"application/json"},					
-    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens: maxTokens,					
-      ...(systemPrompt ? {system: systemPrompt} : {}),					
-      messages:[{role:"user", content:prompt}]					
-    })					
-  }).then(r=>r.json()).then(d=>d.content?.map(b=>b.text||"").join("")||"");					
+    body: JSON.stringify({ prompt, systemPrompt, maxTokens })					
+  }).then(r=>r.json()).then(d=>d.text||"");					
 }					
 function generateDemoLogs(habits) {					
   const logs = {};					
@@ -228,7 +225,7 @@ function Nav({ tab, setTab }) {
     { id:"goals",     icon:"◎", label:"Goals" },					
     { id:"habits",    icon:"✦", label:"Habits" },					
     { id:"reminders", icon:"🔔", label:"Reminders" },					
-    { id:"diary",     icon:"📓", label:"Diary" },					
+    { id:"diary",     icon:"📓", label:"Journal" },					
     { id:"analytics", icon:"▲", label:"Analytics" },					
   ];					
   return (					
@@ -239,6 +236,159 @@ function Nav({ tab, setTab }) {
           <span>{t.icon}</span>{t.label}					
         </button>					
       ))}					
+    </div>					
+  );					
+}					
+// ─── JOURNAL PANEL ────────────────────────────────────────────────────────────					
+function JournalPanel({ goal, onAddNote, onClose, catColor }) {					
+  const [note, setNote] = useState("");					
+  return (					
+    <div style={{background:"#13151E",border:"1px solid rgba(255,255,255,0.08)",borderRadius:13,padding:18,marginTop:13}}>					
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:13}}>					
+        <span style={{color:"#fff",fontSize:12,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>Journal</span>					
+        <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.38)",cursor:"pointer",fontSize:17,fontFamily:"inherit"}}>✕</button>					
+      </div>					
+      <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="How is this goal going? What did you do today?" rows={3}					
+        style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:9,padding:"11px",color:"#fff",fontSize:13,resize:"none",outline:"none",fontFamily:"inherit",lineHeight:1.6,boxSizing:"border-box"}}/>					
+      <button onClick={()=>{if(!note.trim())return;onAddNote(goal.id,{date:todayStr(),note:note.trim()});setNote("");}}					
+        style={{marginTop:8,background:catColor,border:"none",borderRadius:8,padding:"9px 18px",color:"#fff",cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"inherit"}}>Add Entry</button>					
+      <div style={{display:"flex",flexDirection:"column",gap:9,maxHeight:170,overflowY:"auto",marginTop:11}}>					
+        {[...goal.journal].reverse().map((j,i)=>(					
+          <div key={i} style={{background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"10px 13px",borderLeft:`3px solid ${catColor}`}}>					
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.38)",marginBottom:3}}>{j.date||j.id}</div>					
+            <p style={{fontSize:12,color:"rgba(255,255,255,0.65)",margin:0,lineHeight:1.5}}>{j.text||j.note}</p>					
+          </div>					
+        ))}					
+        {goal.journal.length===0&&<p style={{color:"rgba(255,255,255,0.18)",fontSize:11,textAlign:"center",padding:"10px 0"}}>No entries yet</p>}					
+      </div>					
+    </div>					
+  );					
+}					
+// ─── SMART MODAL ──────────────────────────────────────────────────────────────					
+function SmartModal({ onSave, onClose, editGoal }) {					
+  const CATS = [					
+    { id:"physical",  label:"Physical",  icon:"⚡", color:"#E8645A" },					
+    { id:"financial", label:"Financial", icon:"◈",  color:"#4CAF82" },					
+    { id:"religious", label:"Religious", icon:"✦",  color:"#C8A96E" },					
+    { id:"parenting", label:"Parenting", icon:"❋",  color:"#7EB8D4" },					
+    { id:"career",    label:"Career",    icon:"▲",  color:"#9B8FE8" },					
+    { id:"lifestyle", label:"Lifestyle", icon:"◎",  color:"#E8A45A" },					
+    { id:"emotional", label:"Emotional", icon:"◐",  color:"#E87AAF" },					
+    { id:"travel",    label:"Travel",    icon:"⊕",  color:"#5AC8C8" },					
+  ];					
+  const [step, setStep] = useState(0);					
+  const [form, setForm] = useState(editGoal||{title:"",category:"physical",specific:"",measurable:"",achievable:"",relevant:"",timebound:"",priority:"Medium",subtasks:[],journal:[]});					
+  const [si, setSi] = useState("");					
+  const steps=[					
+    {key:"title",     label:"What's your goal?",      hint:"Clear, action-oriented title",       type:"text",     placeholder:"e.g. Run a 5K without stopping"},					
+    {key:"category",  label:"Which area of life?",    type:"category"},					
+    {key:"specific",  label:"Make it Specific",       hint:"What exactly will you accomplish?",  type:"textarea", placeholder:"Describe exactly what you want to achieve..."},					
+    {key:"measurable",label:"Make it Measurable",     hint:"How will you know you succeeded?",   type:"textarea", placeholder:"What number or milestone proves success?"},					
+    {key:"achievable",label:"Make it Achievable",     hint:"Why is this realistic right now?",   type:"textarea", placeholder:"What resources/skills do you have?"},					
+    {key:"relevant",  label:"Make it Relevant",       hint:"Why does this matter deeply?",       type:"textarea", placeholder:"How does this connect to your bigger life goals?"},					
+    {key:"timebound", label:"Set a Deadline",         hint:"When will you complete this?",       type:"date"},					
+    {key:"priority",  label:"Set Priority",           type:"priority"},					
+    {key:"subtasks",  label:"Break into subtasks",    hint:"Key milestones along the way",       type:"subtasks"},					
+  ];					
+  const cur=steps[step], cat=CATS.find(c=>c.id===form.category)||CATS[0];					
+  const upd=(k,v)=>setForm(f=>({...f,[k]:v}));					
+  const canNext=()=>cur.key==="title"?form.title.trim().length>2:cur.key==="specific"?form.specific.trim().length>5:true;					
+  const addSub=()=>{if(!si.trim())return;upd("subtasks",[...form.subtasks,{id:Date.now().toString(),label:si.trim(),done:false}]);setSi("");};					
+  const save=()=>{onSave({...form,id:editGoal?.id||Date.now().toString(),journal:editGoal?.journal||[],createdAt:editGoal?.createdAt||todayStr()});onClose();};					
+  const inp={background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"13px 15px",color:"#fff",fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"};					
+  return (					
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}}>					
+      <div style={{background:"#13151E",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,width:"min(540px,95vw)",padding:"36px",position:"relative"}}>					
+        <div style={{display:"flex",gap:4,marginBottom:28}}>{steps.map((_,i)=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=step?cat.color:"rgba(255,255,255,0.1)",transition:"background 0.3s"}}/>)}</div>					
+        <div style={{fontSize:10,letterSpacing:3,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",marginBottom:6}}>Step {step+1} of {steps.length}</div>					
+        <h2 style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:4,fontFamily:"Georgia,serif"}}>{cur.label}</h2>					
+        {cur.hint&&<p style={{fontSize:12,color:"rgba(255,255,255,0.38)",marginBottom:20,lineHeight:1.5}}>{cur.hint}</p>}					
+        {cur.type==="text"&&<input value={form[cur.key]} onChange={e=>upd(cur.key,e.target.value)} placeholder={cur.placeholder} autoFocus onKeyDown={e=>e.key==="Enter"&&canNext()&&setStep(s=>s+1)} style={inp}/>}					
+        {cur.type==="textarea"&&<textarea value={form[cur.key]} onChange={e=>upd(cur.key,e.target.value)} placeholder={cur.placeholder} rows={4} style={{...inp,resize:"vertical",lineHeight:1.6}}/>}					
+        {cur.type==="date"&&<input type="date" value={form.timebound} onChange={e=>upd("timebound",e.target.value)} style={{...inp,width:"auto",colorScheme:"dark"}}/>}					
+        {cur.type==="category"&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9}}>{CATS.map(c=><button key={c.id} onClick={()=>upd("category",c.id)} style={{background:form.category===c.id?`${c.color}22`:"rgba(255,255,255,0.03)",border:`1.5px solid ${form.category===c.id?c.color:"rgba(255,255,255,0.08)"}`,borderRadius:11,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:5,fontFamily:"inherit"}}><span style={{fontSize:18}}>{c.icon}</span><span style={{fontSize:10,color:form.category===c.id?c.color:"rgba(255,255,255,0.38)",fontWeight:700}}>{c.label}</span></button>)}</div>}					
+        {cur.type==="priority"&&<div style={{display:"flex",gap:10}}>{["High","Medium","Low"].map(p=><button key={p} onClick={()=>upd("priority",p)} style={{flex:1,padding:"13px",borderRadius:11,border:`1.5px solid ${form.priority===p?(p==="High"?"#E8645A":p==="Medium"?"#C8A96E":"#4CAF82"):"rgba(255,255,255,0.08)"}`,background:form.priority===p?"rgba(255,255,255,0.06)":"transparent",color:form.priority===p?"#fff":"rgba(255,255,255,0.38)",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>{p}</button>)}</div>}					
+        {cur.type==="subtasks"&&<div><div style={{display:"flex",gap:8,marginBottom:10}}><input value={si} onChange={e=>setSi(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addSub()} placeholder="Add a milestone..." style={{...inp,flex:1}}/><button onClick={addSub} style={{background:cat.color,border:"none",borderRadius:10,padding:"0 16px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:17,fontFamily:"inherit"}}>+</button></div><div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:170,overflowY:"auto"}}>{form.subtasks.map(s=><div key={s.id} style={{display:"flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"9px 13px"}}><span style={{flex:1,color:"rgba(255,255,255,0.8)",fontSize:13}}>{s.label}</span><button onClick={()=>upd("subtasks",form.subtasks.filter(x=>x.id!==s.id))} style={{background:"none",border:"none",color:"rgba(255,255,255,0.38)",cursor:"pointer",fontSize:15,fontFamily:"inherit"}}>✕</button></div>)}{form.subtasks.length===0&&<p style={{color:"rgba(255,255,255,0.2)",fontSize:12,textAlign:"center",padding:"14px 0"}}>No subtasks yet</p>}</div></div>}					
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:28}}>					
+          <button onClick={()=>step===0?onClose():setStep(s=>s-1)} style={{background:"none",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"11px 22px",color:"rgba(255,255,255,0.38)",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>{step===0?"Cancel":"← Back"}</button>					
+          {step<steps.length-1?<button onClick={()=>setStep(s=>s+1)} disabled={!canNext()} style={{background:canNext()?cat.color:"rgba(255,255,255,0.08)",border:"none",borderRadius:10,padding:"11px 26px",color:canNext()?"#fff":"rgba(255,255,255,0.2)",cursor:canNext()?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Continue →</button>:<button onClick={save} style={{background:cat.color,border:"none",borderRadius:10,padding:"11px 26px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>{editGoal?"Save ✓":"Create Goal ✓"}</button>}					
+        </div>					
+      </div>					
+    </div>					
+  );					
+}					
+// ─── AI COACH MODAL ───────────────────────────────────────────────────────────					
+function AICoachModal({ onClose, onGoalGenerated }) {					
+  const CATS = [					
+    { id:"physical",  label:"Physical",  icon:"⚡", color:"#E8645A" },					
+    { id:"financial", label:"Financial", icon:"◈",  color:"#4CAF82" },					
+    { id:"religious", label:"Religious", icon:"✦",  color:"#C8A96E" },					
+    { id:"parenting", label:"Parenting", icon:"❋",  color:"#7EB8D4" },					
+    { id:"career",    label:"Career",    icon:"▲",  color:"#9B8FE8" },					
+    { id:"lifestyle", label:"Lifestyle", icon:"◎",  color:"#E8A45A" },					
+    { id:"emotional", label:"Emotional", icon:"◐",  color:"#E87AAF" },					
+    { id:"travel",    label:"Travel",    icon:"⊕",  color:"#5AC8C8" },					
+  ];					
+  const [msgs, setMsgs] = useState([{role:"assistant",content:"Hey! I am your SMART Goal Coach ✦\n\nDescribe a goal you are thinking about — as vague or specific as you want. I will ask the right questions and build you a complete SMART goal ready for your dashboard."}]);					
+  const [input, setInput] = useState("");					
+  const [loading, setLoading] = useState(false);					
+  const [pending, setPending] = useState(null);					
+  const bottomRef = useRef(null);					
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"})},[msgs,loading]);					
+  const SYSTEM = `You are a SMART Goal Coach inside a personal goal tracking app. Help the user define a SMART goal through natural conversation. Categories: physical, financial, religious, parenting, career, lifestyle, emotional, travel. When ready output:					
+<GOAL_JSON>{"title":"...","category":"physical","priority":"High","specific":"...","measurable":"...","achievable":"...","relevant":"...","timebound":"YYYY-MM-DD","subtasks":["..."]}</GOAL_JSON>					
+Be direct, warm, motivating.`;					
+  const send = async () => {					
+    if (!input.trim()||loading) return;					
+    const nm = [...msgs,{role:"user",content:input.trim()}];					
+    setMsgs(nm); setInput(""); setLoading(true);					
+    try {					
+      const text = await callClaude(nm.map(m=>m.role+": "+m.content).join("\n"), SYSTEM, 1000);					
+      const match = text.match(/<GOAL_JSON>([\s\S]*?)<\/GOAL_JSON>/);					
+      if (match) { try { const raw=JSON.parse(match[1].trim()); setPending({id:Date.now().toString(),...raw,category:raw.category?.toLowerCase()||"physical",subtasks:(raw.subtasks||[]).map((s,i)=>({id:`ai${Date.now()}${i}`,label:s,done:false})),journal:[],createdAt:todayStr()}); } catch(e){} }					
+      setMsgs(prev=>[...prev,{role:"assistant",content:text.replace(/<GOAL_JSON>[\s\S]*?<\/GOAL_JSON>/g,"").trim()}]);					
+    } catch(e) { setMsgs(prev=>[...prev,{role:"assistant",content:"Connection error. Try again."}]); }					
+    setLoading(false);					
+  };					
+  const cat = pending ? (CATS.find(c=>c.id===pending.category)||CATS[0]) : null;					
+  const T2 = {border:"rgba(255,255,255,0.07)",muted:"rgba(255,255,255,0.38)"};					
+  return (					
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(14px)"}}>					
+      <div style={{background:"#0D0F14",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,width:"min(580px,96vw)",height:"min(680px,90vh)",display:"flex",flexDirection:"column",overflow:"hidden"}}>					
+        <div style={{padding:"18px 22px",borderBottom:`1px solid ${T2.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>					
+          <div style={{display:"flex",alignItems:"center",gap:12}}>					
+            <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#9B8FE8,#E87AAF)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>✦</div>					
+            <div><div style={{fontWeight:700,color:"#fff",fontSize:14}}>SMART Goal Coach</div><div style={{fontSize:10,color:T2.muted,letterSpacing:1}}>POWERED BY AI</div></div>					
+          </div>					
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:8,padding:"7px 14px",color:T2.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>					
+        </div>					
+        <div style={{flex:1,overflowY:"auto",padding:"18px 22px",display:"flex",flexDirection:"column",gap:12}}>					
+          {msgs.map((m,i)=>(					
+            <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>					
+              <div style={{maxWidth:"83%",padding:"12px 15px",borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.role==="user"?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.05)",color:"#fff",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap",border:m.role==="assistant"?`1px solid ${T2.border}`:"none"}}>{m.content}</div>					
+            </div>					
+          ))}					
+          {loading && <div style={{display:"flex"}}><div style={{padding:"12px 16px",borderRadius:"16px 16px 16px 4px",background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,display:"flex",gap:5,alignItems:"center"}}>{[0,1,2].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",background:"rgba(155,143,232,0.8)",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div></div>}					
+          {pending&&cat&&(					
+            <div style={{background:`${cat.color}12`,border:`1px solid ${cat.color}44`,borderRadius:14,padding:16}}>					
+              <div style={{fontSize:10,color:cat.color,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>✓ Goal Ready to Add</div>					
+              <div style={{fontWeight:700,color:"#fff",fontSize:14,marginBottom:3}}>{pending.title}</div>					
+              <div style={{fontSize:11,color:T2.muted,marginBottom:12}}>{cat.icon} {cat.label} · {pending.priority} · Due {pending.timebound}</div>					
+              <div style={{display:"flex",gap:8}}>					
+                <button onClick={()=>{onGoalGenerated(pending);onClose();}} style={{flex:1,background:cat.color,border:"none",borderRadius:10,padding:"11px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Add to Dashboard →</button>					
+                <button onClick={()=>setPending(null)} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:10,padding:"11px 14px",color:T2.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Keep chatting</button>					
+              </div>					
+            </div>					
+          )}					
+          <div ref={bottomRef}/>					
+        </div>					
+        <div style={{padding:"14px 22px",borderTop:`1px solid ${T2.border}`,display:"flex",gap:10}}>					
+          <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&send()} placeholder="Describe a goal you want to work toward..."					
+            style={{flex:1,background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"12px 15px",color:"#fff",fontSize:13,outline:"none",fontFamily:"inherit"}}/>					
+          <button onClick={send} disabled={loading||!input.trim()} style={{background:input.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"0 20px",color:input.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:input.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Send</button>					
+        </div>					
+      </div>					
+      <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>					
     </div>					
   );					
 }					
@@ -1014,6 +1164,142 @@ function AnalyticsPage({ habits, habitLogs, goals }) {
               })}					
             </div>					
           )}					
+        </div>					
+      )}					
+      {analyticsTab === "journal" && (					
+        <div>					
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>					
+            {[					
+              {l:"Total Entries", v:diary.length, c:"#9B8FE8"},					
+              {l:"This Month", v:diary.filter(e=>new Date(e.createdAt)>new Date(Date.now()-30*86400000)).length, c:"#7EB8D4"},					
+              {l:"Words Written", v:diary.reduce((a,e)=>a+(e.wordCount||0),0).toLocaleString(), c:"#4CAF82"},					
+              {l:"Avg Mood", v:diary.length>0?(["😔","😐","🙂","😊","🤩"][Math.min(4,Math.round(diary.reduce((a,e)=>a+(["low","neutral","good","great"].indexOf(e.mood||"good")+1),0)/Math.max(diary.length,1))-1)]||"🙂"):"—", c:"#C8A96E"},					
+            ].map(x=>(					
+              <div key={x.l} style={{background:"#13151E",borderRadius:12,padding:"14px 16px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+                <div style={{fontSize:9,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>					
+                <div style={{fontSize:26,fontWeight:700,color:x.c,letterSpacing:-1}}>{x.v}</div>					
+              </div>					
+            ))}					
+          </div>					
+          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",marginBottom:18,border:"1px solid rgba(255,255,255,0.07)"}}>					
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Topics Written About</div>					
+            {(()=>{					
+              const catCounts = diary.flatMap(e=>e.categories||["uncategorized"]).reduce((acc,c)=>{acc[c]=(acc[c]||0)+1;return acc;},{});					
+              const total = Object.values(catCounts).reduce((a,b)=>a+b,0)||1;					
+              const colors = {physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E",uncategorized:"#6B7280"};					
+              return Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([cat,count])=>(					
+                <div key={cat} style={{marginBottom:12}}>					
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>					
+                    <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",fontWeight:600,textTransform:"capitalize"}}>{cat}</span>					
+                    <span style={{fontSize:12,fontWeight:700,color:colors[cat]||"#9B8FE8"}}>{count} {count===1?"entry":"entries"}</span>					
+                  </div>					
+                  <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>					
+                    <div style={{height:"100%",borderRadius:3,background:colors[cat]||"#9B8FE8",width:`${Math.round(count/total*100)}%`,transition:"width 0.6s ease"}}/>					
+                  </div>					
+                </div>					
+              ));					
+            })()}					
+          </div>					
+          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",marginBottom:18,border:"1px solid rgba(255,255,255,0.07)"}}>					
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Mood Distribution</div>					
+            <div style={{display:"flex",gap:10}}>					
+              {[["great","😊","#4CAF82"],["good","🙂","#C8A96E"],["neutral","😐","#7EB8D4"],["low","😔","#E8645A"]].map(([mood,emoji,color])=>{					
+                const cnt = diary.filter(e=>e.mood===mood).length;					
+                const pct = diary.length > 0 ? Math.round(cnt/diary.length*100) : 0;					
+                return (					
+                  <div key={mood} style={{flex:1,background:"rgba(255,255,255,0.03)",borderRadius:11,padding:"14px 10px",textAlign:"center",border:`1px solid ${pct>0?color+"33":"rgba(255,255,255,0.06)"}`}}>					
+                    <div style={{fontSize:22,marginBottom:6}}>{emoji}</div>					
+                    <div style={{fontSize:18,fontWeight:700,color,marginBottom:2}}>{pct}%</div>					
+                    <div style={{fontSize:10,color:"rgba(255,255,255,0.38)",textTransform:"capitalize"}}>{mood}</div>					
+                    <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:2}}>{cnt} entries</div>					
+                  </div>					
+                );					
+              })}					
+            </div>					
+          </div>					
+          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Recent Journal Entries</div>					
+            {diary.length===0 ? <p style={{color:"rgba(255,255,255,0.25)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No journal entries yet</p> :					
+              [...diary].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5).map(e=>{					
+                const moodColors={great:"#4CAF82",good:"#C8A96E",neutral:"#7EB8D4",low:"#E8645A"};					
+                const catColors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E"};					
+                return (					
+                  <div key={e.id} style={{padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>					
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>					
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>					
+                        {(e.categories||[]).map(c=><span key={c} style={{fontSize:9,background:`${catColors[c]||"#9B8FE8"}22`,color:catColors[c]||"#9B8FE8",padding:"2px 7px",borderRadius:20,fontWeight:700,textTransform:"capitalize"}}>{c}</span>)}					
+                      </div>					
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>					
+                        {e.mood&&<span style={{fontSize:10,color:moodColors[e.mood]||"#9B8FE8",fontWeight:600,textTransform:"capitalize"}}>{e.mood}</span>}					
+                        <span style={{fontSize:10,color:"rgba(255,255,255,0.25)"}}>{e.createdAt?.split("T")[0]||""}</span>					
+                      </div>					
+                    </div>					
+                    <p style={{fontSize:12,color:"rgba(255,255,255,0.6)",margin:0,lineHeight:1.5,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{e.text}</p>					
+                  </div>					
+                );					
+              })					
+            }					
+          </div>					
+        </div>					
+      )}					
+      {analyticsTab === "reminders" && (					
+        <div>					
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>					
+            {[					
+              {l:"Total", v:reminders.length, c:"#9B8FE8"},					
+              {l:"Completed", v:reminders.filter(r=>r.done).length, c:"#4CAF82"},					
+              {l:"Pending", v:reminders.filter(r=>!r.done).length, c:"#C8A96E"},					
+              {l:"Completion %", v:reminders.length>0?Math.round(reminders.filter(r=>r.done).length/reminders.length*100)+"%":"—", c:"#7EB8D4"},					
+            ].map(x=>(					
+              <div key={x.l} style={{background:"#13151E",borderRadius:12,padding:"14px 16px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+                <div style={{fontSize:9,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>					
+                <div style={{fontSize:26,fontWeight:700,color:x.c,letterSpacing:-1}}>{x.v}</div>					
+              </div>					
+            ))}					
+          </div>					
+          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",marginBottom:18,border:"1px solid rgba(255,255,255,0.07)"}}>					
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>By Life Category</div>					
+            {(()=>{					
+              const catCounts = reminders.reduce((acc,r)=>{const c=r.category||"general";acc[c]=(acc[c]||0)+1;return acc;},{});					
+              const catDone = reminders.reduce((acc,r)=>{if(r.done){const c=r.category||"general";acc[c]=(acc[c]||0)+1;}return acc;},{});					
+              const colors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E",general:"#6B7280"};					
+              if(Object.keys(catCounts).length===0) return <p style={{color:"rgba(255,255,255,0.25)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No reminders yet</p>;					
+              return Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([cat,total])=>{					
+                const done=catDone[cat]||0;					
+                const pct=total>0?Math.round(done/total*100):0;					
+                return (					
+                  <div key={cat} style={{marginBottom:14}}>					
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>					
+                      <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",fontWeight:600,textTransform:"capitalize"}}>{cat}</span>					
+                      <span style={{fontSize:12,fontWeight:700,color:colors[cat]||"#9B8FE8"}}>{done}/{total} done</span>					
+                    </div>					
+                    <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>					
+                      <div style={{height:"100%",borderRadius:3,background:colors[cat]||"#9B8FE8",width:`${pct}%`,transition:"width 0.6s ease"}}/>					
+                    </div>					
+                  </div>					
+                );					
+              });					
+            })()}					
+          </div>					
+          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Reminders + Goals Connection</div>					
+            <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",marginBottom:14,lineHeight:1.5}}>How your reminders align with your life goals — AI categorizes each reminder to surface patterns.</p>					
+            {["physical","financial","career","emotional","parenting","lifestyle","travel","religious"].map(cat=>{					
+              const catReminders = reminders.filter(r=>r.category===cat);					
+              const catGoals = goals.filter(g=>g.category===cat);					
+              if(!catReminders.length && !catGoals.length) return null;					
+              const colors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E"};					
+              return (					
+                <div key={cat} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>					
+                  <span style={{fontSize:11,color:colors[cat],fontWeight:700,textTransform:"capitalize",minWidth:70}}>{cat}</span>					
+                  <div style={{flex:1,display:"flex",gap:8}}>					
+                    {catReminders.length>0&&<span style={{fontSize:10,background:`${colors[cat]}18`,color:colors[cat],padding:"2px 8px",borderRadius:20}}>{catReminders.length} reminder{catReminders.length>1?"s":""}</span>}					
+                    {catGoals.length>0&&<span style={{fontSize:10,background:"rgba(155,143,232,0.15)",color:"#9B8FE8",padding:"2px 8px",borderRadius:20}}>{catGoals.length} goal{catGoals.length>1?"s":""}</span>}					
+                  </div>					
+                </div>					
+              );					
+            })}					
+          </div>					
         </div>					
       )}					
       <style>{`@keyframes blink{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}`}</style>					
@@ -1983,7 +2269,7 @@ export default function App() {
           <button onClick={()=>setShowAI(true)} style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.28)",borderRadius:10,padding:"8px 13px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>✦ AI Coach</button>					
           {tab==="goals"&&<button onClick={()=>{setEditGoal(null);setShowModal(true);}} style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"8px 16px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit",boxShadow:"0 4px 16px rgba(155,143,232,0.25)"}}>+ Goal</button>}					
           {demoMode					
-            ? <button onClick={handleGoogleLogin} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 12px",color:"rgba(255,255,255,0.6)",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>Sign in →</button>					
+            ? <button onClick={()=>{setDemoMode(false);setGoals([]);setHabits([]);setHabitLogs({});}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 12px",color:"rgba(255,255,255,0.6)",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>Sign in →</button>					
             : <div style={{display:"flex",gap:7,alignItems:"center"}}>					
                 {user?.photoURL && <img src={user.photoURL} alt="" style={{width:28,height:28,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.15)",flexShrink:0}}/>}					
                 <button onClick={()=>setTab("settings")} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:9,padding:"7px 11px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙</button>					
