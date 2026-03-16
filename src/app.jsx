@@ -348,18 +348,86 @@ function JournalPanel({ goal, onAddNote, onClose, catColor }) {
     </div>					
   );					
 }					
+// ─── CUSTOM CATEGORY MODAL ───────────────────────────────────────────────────					
+// Users can create custom goal/habit categories stored in localStorage					
+const CUSTOM_CATS_KEY = "lumina_custom_cats";					
+function getCustomCats() {					
+  try { return JSON.parse(localStorage.getItem(CUSTOM_CATS_KEY)) || []; } catch { return []; }					
+}					
+function saveCustomCats(cats) {					
+  try { localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(cats)); } catch {}					
+}					
+const EMOJI_OPTIONS = ["🎯","💪","🧠","❤️","🌱","🎨","🏠","💼","📚","🎵","🍎","✈️","🌍","🔥","⭐","🎓","💡","🤝","🙏","🌸","🏋️","🧘","💰","🎁","🌈","🦋","🚀","🎪","🍕","🏆"];					
+function CustomCategoryModal({ onSave, onClose }) {					
+  const [name, setName] = useState("");					
+  const [emoji, setEmoji] = useState("🎯");					
+  const [color, setColor] = useState("#9B8FE8");					
+  const COLORS = ["#9B8FE8","#E8645A","#4CAF82","#C8A96E","#7EB8D4","#E87AAF","#5AC8C8","#E8A45A","#8FE8C4","#E8C48F"];					
+  const save = () => {					
+    if (!name.trim()) return;					
+    const existing = getCustomCats();					
+    const newCat = { id: `custom_${Date.now()}`, label: name.trim(), icon: emoji, color, custom: true };					
+    saveCustomCats([...existing, newCat]);					
+    onSave(newCat);					
+    onClose();					
+  };					
+  return (					
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,backdropFilter:"blur(8px)"}}>					
+      <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:18,width:"min(400px,95vw)",padding:"28px"}}>					
+        <h3 style={{fontSize:17,fontWeight:700,color:T.text,marginBottom:20}}>Create Custom Category</h3>					
+        <div style={{marginBottom:16}}>					
+          <div style={{fontSize:11,color:T.muted,letterSpacing:1,marginBottom:8}}>CATEGORY NAME</div>					
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Social Life, Health, Creativity..."					
+            autoFocus onKeyDown={e=>e.key==="Enter"&&save()}					
+            style={{width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"11px 14px",color:T.text,fontSize:13,outline:"none",fontFamily:"inherit",boxSizing:"border-box"}}/>					
+        </div>					
+        <div style={{marginBottom:16}}>					
+          <div style={{fontSize:11,color:T.muted,letterSpacing:1,marginBottom:8}}>ICON</div>					
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>					
+            {EMOJI_OPTIONS.map(e=>(					
+              <button key={e} onClick={()=>setEmoji(e)}					
+                style={{width:36,height:36,borderRadius:8,border:`2px solid ${emoji===e?color:"transparent"}`,background:emoji===e?`${color}22`:"rgba(255,255,255,0.04)",cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>					
+                {e}					
+              </button>					
+            ))}					
+          </div>					
+        </div>					
+        <div style={{marginBottom:24}}>					
+          <div style={{fontSize:11,color:T.muted,letterSpacing:1,marginBottom:8}}>COLOR</div>					
+          <div style={{display:"flex",gap:8}}>					
+            {COLORS.map(c=>(					
+              <button key={c} onClick={()=>setColor(c)}					
+                style={{width:28,height:28,borderRadius:"50%",background:c,border:`3px solid ${color===c?"#fff":"transparent"}`,cursor:"pointer"}}/>					
+            ))}					
+          </div>					
+        </div>					
+        <div style={{display:"flex",gap:10,marginBottom:12}}>					
+          <div style={{padding:"8px 14px",borderRadius:10,background:`${color}18`,border:`1.5px solid ${color}55`,display:"flex",alignItems:"center",gap:8}}>					
+            <span style={{fontSize:18}}>{emoji}</span>					
+            <span style={{fontSize:13,fontWeight:700,color}}>{name||"Preview"}</span>					
+          </div>					
+        </div>					
+        <div style={{display:"flex",gap:10}}>					
+          <button onClick={onClose} style={{flex:1,background:"none",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px",color:T.muted,cursor:"pointer",fontFamily:"inherit",fontSize:13}}>Cancel</button>					
+          <button onClick={save} disabled={!name.trim()} style={{flex:2,background:name.trim()?color:"rgba(255,255,255,0.08)",border:"none",borderRadius:10,padding:"12px",color:"#fff",cursor:name.trim()?"pointer":"not-allowed",fontWeight:700,fontFamily:"inherit",fontSize:13}}>					
+            Create Category					
+          </button>					
+        </div>					
+      </div>					
+    </div>					
+  );					
+}					
+// Hook to get all categories (built-in + custom)					
+function useAllCats() {					
+  const [customCats, setCustomCats] = useState(getCustomCats);					
+  const refresh = () => setCustomCats(getCustomCats());					
+  const all = [...CATS, ...customCats];					
+  return { all, customCats, refresh };					
+}					
 // ─── SMART MODAL ──────────────────────────────────────────────────────────────					
 function SmartModal({ onSave, onClose, editGoal }) {					
-  const CATS = [					
-    { id:"physical",  label:"Physical",  icon:"⚡", color:"#E8645A" },					
-    { id:"financial", label:"Financial", icon:"◈",  color:"#4CAF82" },					
-    { id:"religious", label:"Religious", icon:"✦",  color:"#C8A96E" },					
-    { id:"parenting", label:"Parenting", icon:"❋",  color:"#7EB8D4" },					
-    { id:"career",    label:"Career",    icon:"▲",  color:"#9B8FE8" },					
-    { id:"lifestyle", label:"Lifestyle", icon:"◎",  color:"#E8A45A" },					
-    { id:"emotional", label:"Emotional", icon:"◐",  color:"#E87AAF" },					
-    { id:"travel",    label:"Travel",    icon:"⊕",  color:"#5AC8C8" },					
-  ];					
+  const { all: CATS, refresh: refreshCats } = useAllCats();					
+  const [showCustomCatModal, setShowCustomCatModal] = useState(false);					
   const [step, setStep] = useState(0);					
   const [form, setForm] = useState(editGoal||{title:"",category:"physical",specific:"",measurable:"",achievable:"",relevant:"",timebound:"",priority:"Medium",subtasks:[],journal:[]});					
   const [si, setSi] = useState("");					
@@ -390,7 +458,7 @@ function SmartModal({ onSave, onClose, editGoal }) {
         {cur.type==="text"&&<input value={form[cur.key]} onChange={e=>upd(cur.key,e.target.value)} placeholder={cur.placeholder} autoFocus onKeyDown={e=>e.key==="Enter"&&canNext()&&setStep(s=>s+1)} style={inp}/>}					
         {cur.type==="textarea"&&<textarea value={form[cur.key]} onChange={e=>upd(cur.key,e.target.value)} placeholder={cur.placeholder} rows={4} style={{...inp,resize:"vertical",lineHeight:1.6}}/>}					
         {cur.type==="date"&&<input type="date" value={form.timebound} onChange={e=>upd("timebound",e.target.value)} style={{...inp,width:"auto",colorScheme:"dark"}}/>}					
-        {cur.type==="category"&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9}}>{CATS.map(c=><button key={c.id} onClick={()=>upd("category",c.id)} style={{background:form.category===c.id?`${c.color}22`:"rgba(255,255,255,0.03)",border:`1.5px solid ${form.category===c.id?c.color:"rgba(255,255,255,0.08)"}`,borderRadius:11,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:5,fontFamily:"inherit"}}><span style={{fontSize:18}}>{c.icon}</span><span style={{fontSize:10,color:form.category===c.id?c.color:"rgba(255,255,255,0.38)",fontWeight:700}}>{c.label}</span></button>)}</div>}					
+        {cur.type==="category"&&<div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:10}}>{CATS.map(c=><button key={c.id} onClick={()=>upd("category",c.id)} style={{background:form.category===c.id?`${c.color}22`:"rgba(255,255,255,0.03)",border:`1.5px solid ${form.category===c.id?c.color:"rgba(255,255,255,0.08)"}`,borderRadius:11,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:5,fontFamily:"inherit"}}><span style={{fontSize:18}}>{c.icon}</span><span style={{fontSize:10,color:form.category===c.id?c.color:"rgba(255,255,255,0.38)",fontWeight:700}}>{c.label}</span></button>)}<button onClick={()=>setShowCustomCatModal(true)} style={{background:"rgba(255,255,255,0.03)",border:"1.5px dashed rgba(255,255,255,0.15)",borderRadius:11,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:5,fontFamily:"inherit"}}><span style={{fontSize:18}}>＋</span><span style={{fontSize:10,color:"rgba(255,255,255,0.38)",fontWeight:700}}>Custom</span></button></div>{showCustomCatModal&&<CustomCategoryModal onSave={nc=>{refreshCats();upd("category",nc.id);}} onClose={()=>setShowCustomCatModal(false)}/>}</div>}					
         {cur.type==="priority"&&<div style={{display:"flex",gap:10}}>{["High","Medium","Low"].map(p=><button key={p} onClick={()=>upd("priority",p)} style={{flex:1,padding:"13px",borderRadius:11,border:`1.5px solid ${form.priority===p?(p==="High"?"#E8645A":p==="Medium"?"#C8A96E":"#4CAF82"):"rgba(255,255,255,0.08)"}`,background:form.priority===p?"rgba(255,255,255,0.06)":"transparent",color:form.priority===p?"#fff":"rgba(255,255,255,0.38)",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>{p}</button>)}</div>}					
         {cur.type==="subtasks"&&<div><div style={{display:"flex",gap:8,marginBottom:10}}><input value={si} onChange={e=>setSi(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addSub()} placeholder="Add a milestone..." style={{...inp,flex:1}}/><button onClick={addSub} style={{background:cat.color,border:"none",borderRadius:10,padding:"0 16px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:17,fontFamily:"inherit"}}>+</button></div><div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:170,overflowY:"auto"}}>{form.subtasks.map(s=><div key={s.id} style={{display:"flex",alignItems:"center",gap:9,background:"rgba(255,255,255,0.04)",borderRadius:8,padding:"9px 13px"}}><span style={{flex:1,color:"rgba(255,255,255,0.8)",fontSize:13}}>{s.label}</span><button onClick={()=>upd("subtasks",form.subtasks.filter(x=>x.id!==s.id))} style={{background:"none",border:"none",color:"rgba(255,255,255,0.38)",cursor:"pointer",fontSize:15,fontFamily:"inherit"}}>✕</button></div>)}{form.subtasks.length===0&&<p style={{color:"rgba(255,255,255,0.2)",fontSize:12,textAlign:"center",padding:"14px 0"}}>No subtasks yet</p>}</div></div>}					
         <div style={{display:"flex",justifyContent:"space-between",marginTop:28}}>					
@@ -523,7 +591,7 @@ Output format (JSON array only):
   const cat = pending ? (CATS.find(c=>c.id===pending.category)||CATS[0]) : null;					
   return (					
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(14px)"}}>					
-      <div style={{background:"#0D0F14",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,width:"min(620px,96vw)",height:"min(720px,92vh)",display:"flex",flexDirection:"column",overflow:"hidden"}}>					
+      <div style={{background:T.bg,border:`1px solid ${T.border}`,borderRadius:22,width:"min(620px,96vw)",height:"min(720px,92vh)",display:"flex",flexDirection:"column",overflow:"hidden"}}>					
         {/* Header */}					
         <div style={{padding:"16px 22px",borderBottom:`1px solid ${T2.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>					
           <div style={{display:"flex",alignItems:"center",gap:12}}>					
@@ -815,12 +883,15 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
     }					
     return streak;					
   };					
+  const { all: allGoalCats } = useAllCats();					
+  // Merge HAB_CATS + custom cats from goals + any already-used unknown cat ids					
   const allCats = [...new Set(habits.map(h => h.category))];					
   const knownCatIds = HAB_CATS.map(c => c.id);					
-  const customCats = allCats.filter(id => !knownCatIds.includes(id)).map(id => ({					
+  const unknownCats = allCats.filter(id => !knownCatIds.includes(id) && !allGoalCats.find(c=>c.id===id)).map(id => ({					
     id, label: id.charAt(0).toUpperCase() + id.slice(1), color: "#9B8FE8", icon: "◎"					
   }));					
-  const allHabCats = [...HAB_CATS, ...customCats];					
+  const allHabCats = [...HAB_CATS, ...allGoalCats.filter(c=>c.custom), ...unknownCats];					
+  const [showHabCustomCat, setShowHabCustomCat] = useState(false);					
   const todayHabits = habits.filter(isScheduledToday);					
   const filtered = activeCat === "all" ? todayHabits : habits.filter(h => h.category === activeCat);					
   const allDone = todayHabits.length > 0 && todayHabits.every(h => todayLog[h.id]);					
@@ -856,10 +927,19 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
     });					
   };					
   const addAllSelectedPresets = () => {					
-    Object.values(selectedPresets).forEach(({ preset, catId }) => {					
+    const toAdd = Object.values(selectedPresets).map(({ preset, catId }, i) => {					
       const cat = allHabCats.find(c => c.id === catId) || HAB_CATS[0];					
-      addHabit({ label: preset.label, icon: preset.icon, category: catId, color: cat.color, schedule: "daily", customDays: [0,1,2,3,4,5,6] });					
+      return {					
+        id: `h${Date.now()}_${i}`,  // unique ID per habit using index					
+        label: preset.label.trim(),					
+        icon: preset.icon || "✓",					
+        category: catId,					
+        color: cat.color,					
+        schedule: "daily",					
+        customDays: [0,1,2,3,4,5,6],					
+      };					
     });					
+    toAdd.forEach(h => saveHabit(h));  // saveHabit directly, skipping addHabit side effects					
     setSelectedPresets({});					
     setShowPresets(false);					
   };					
@@ -985,7 +1065,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
       {/* Preset Picker Modal */}					
       {showPresets && (					
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(10px)"}}>					
-          <div style={{background:"#13151E",border:`1px solid ${T.border}`,borderRadius:20,width:"min(560px,96vw)",maxHeight:"85vh",display:"flex",flexDirection:"column",overflow:"hidden"}}>					
+          <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:20,width:"min(560px,96vw)",maxHeight:"85vh",display:"flex",flexDirection:"column",overflow:"hidden"}}>					
             <div style={{padding:"22px 24px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>					
               <div>					
                 <div style={{fontWeight:700,color:"#fff",fontSize:16}}>Habit Presets</div>					
@@ -1043,7 +1123,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
       {/* Add Custom Habit Modal */}					
       {showAddHabit && (					
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}}>					
-          <div style={{background:"#13151E",border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>					
+          <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>					
             <h3 style={{fontSize:17,fontWeight:700,color:"#fff",marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Create Custom Habit</h3>					
             <input value={newHabit.label} onChange={e=>setNewHabit(n=>({...n,label:e.target.value}))} placeholder="Habit name..." autoFocus					
               style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:"#fff",fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>					
@@ -1076,7 +1156,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
       {/* Edit Habit Modal */}					
       {showEditModal && editingHabit && (					
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}}>					
-          <div style={{background:"#13151E",border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>					
+          <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>					
             <h3 style={{fontSize:17,fontWeight:700,color:"#fff",marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Edit Habit</h3>					
             <input value={editingHabit.label} onChange={e=>setEditingHabit(h=>({...h,label:e.target.value}))}					
               style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:"#fff",fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>					
@@ -1484,13 +1564,13 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
               {l:"Words Written", v:diary.reduce((a,e)=>a+(e.wordCount||0),0).toLocaleString(), c:"#4CAF82"},					
               {l:"Avg Mood", v:diary.length>0?(["😔","😐","🙂","😊","🤩"][Math.min(4,Math.round(diary.reduce((a,e)=>a+(["low","neutral","good","great"].indexOf(e.mood||"good")+1),0)/Math.max(diary.length,1))-1)]||"🙂"):"—", c:"#C8A96E"},					
             ].map(x=>(					
-              <div key={x.l} style={{background:"#13151E",borderRadius:12,padding:"14px 16px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+              <div key={x.l} style={{background:T.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T.border}`}}>					
                 <div style={{fontSize:9,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>					
                 <div style={{fontSize:26,fontWeight:700,color:x.c,letterSpacing:-1}}>{x.v}</div>					
               </div>					
             ))}					
           </div>					
-          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",marginBottom:18,border:"1px solid rgba(255,255,255,0.07)"}}>					
+          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>					
             <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Topics Written About</div>					
             {(()=>{					
               const catCounts = diary.flatMap(e=>e.categories||["uncategorized"]).reduce((acc,c)=>{acc[c]=(acc[c]||0)+1;return acc;},{});					
@@ -1509,7 +1589,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
               ));					
             })()}					
           </div>					
-          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",marginBottom:18,border:"1px solid rgba(255,255,255,0.07)"}}>					
+          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>					
             <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Mood Distribution</div>					
             <div style={{display:"flex",gap:10}}>					
               {[["great","😊","#4CAF82"],["good","🙂","#C8A96E"],["neutral","😐","#7EB8D4"],["low","😔","#E8645A"]].map(([mood,emoji,color])=>{					
@@ -1526,7 +1606,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
               })}					
             </div>					
           </div>					
-          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>					
             <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Recent Journal Entries</div>					
             {diary.length===0 ? <p style={{color:"rgba(255,255,255,0.25)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No journal entries yet</p> :					
               [...diary].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5).map(e=>{					
@@ -1560,13 +1640,13 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
               {l:"Pending", v:reminders.filter(r=>!r.done).length, c:"#C8A96E"},					
               {l:"Completion %", v:reminders.length>0?Math.round(reminders.filter(r=>r.done).length/reminders.length*100)+"%":"—", c:"#7EB8D4"},					
             ].map(x=>(					
-              <div key={x.l} style={{background:"#13151E",borderRadius:12,padding:"14px 16px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+              <div key={x.l} style={{background:T.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T.border}`}}>					
                 <div style={{fontSize:9,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>					
                 <div style={{fontSize:26,fontWeight:700,color:x.c,letterSpacing:-1}}>{x.v}</div>					
               </div>					
             ))}					
           </div>					
-          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",marginBottom:18,border:"1px solid rgba(255,255,255,0.07)"}}>					
+          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>					
             <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>By Life Category</div>					
             {(()=>{					
               const catCounts = reminders.reduce((acc,r)=>{const c=r.category||"general";acc[c]=(acc[c]||0)+1;return acc;},{});					
@@ -1590,7 +1670,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
               });					
             })()}					
           </div>					
-          <div style={{background:"#13151E",borderRadius:14,padding:"18px 20px",border:"1px solid rgba(255,255,255,0.07)"}}>					
+          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>					
             <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Reminders + Goals Connection</div>					
             <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",marginBottom:14,lineHeight:1.5}}>How your reminders align with your life goals — AI categorizes each reminder to surface patterns.</p>					
             {["physical","financial","career","emotional","parenting","lifestyle","travel","religious"].map(cat=>{					
@@ -2443,10 +2523,19 @@ function EmailVerificationGate({ user, onVerified }) {
   const [checking, setChecking] = useState(false);					
   const [sent, setSent] = useState(false);					
   const [error, setError] = useState("");					
+  // Auto-send verification email when gate first shows					
+  useEffect(() => {					
+    if (user && !user.emailVerified) {					
+      sendEmailVerification(user).then(()=>setSent(true)).catch(()=>{});					
+    }					
+  }, []);					
   const resend = async () => {					
     setSending(true); setError("");					
-    try { await sendEmailVerification(user); setSent(true); }					
-    catch(e) { setError(e.message); }					
+    try { await sendEmailVerification(user); setSent(true); setError(""); }					
+    catch(e) {					
+      const msg = e.message?.replace("Firebase: ","").replace(/\(auth\/.*?\)/,"").trim();					
+      setError(msg || "Could not send email. Wait a moment and try again.");					
+    }					
     setSending(false);					
   };					
   const checkVerified = async () => {					
@@ -2809,10 +2898,10 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
     } catch(e) { setError(`Could not generate Mind Map: ${e.message}`); }					
     setLoading(false);					
   };					
-  const T2 = {card:"#13151E",border:"rgba(255,255,255,0.07)"};					
+  const T2 = {card:T.card,border:T.border};					
   const firstName = user?.displayName?.split(" ")[0] || "You";					
   // Calculate node positions in a circle					
-  const getPosition = (i, total, radius=170) => {					
+  const getPosition = (i, total, radius=190) => {					
     const angle = (i / total) * 2 * Math.PI - Math.PI / 2;					
     return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };					
   };					
@@ -2847,11 +2936,11 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
       {mapData&&!loading&&(					
         <div>					
           {/* SVG Mind Map */}					
-          <div style={{position:"relative",height:460,marginBottom:24,overflow:"hidden"}}>					
-            <svg width="100%" height="460" style={{position:"absolute",inset:0}}>					
+          <div style={{position:"relative",height:520,marginBottom:24,overflow:"hidden"}}>					
+            <svg width="100%" height="520" style={{position:"absolute",inset:0}}>					
               {mapData.map((n,i)=>{					
                 const pos = getPosition(i, mapData.length);					
-                const cx = "50%", cy = 230;					
+                const cx = "50%", cy = 260;					
                 return (					
                   <line key={n.category}					
                     x1="50%" y1={cy}					
@@ -2861,7 +2950,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
               })}					
             </svg>					
             {/* Center node */}					
-            <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",zIndex:2}}>					
+            <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",zIndex:2,textAlign:"center"}}>					
               <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:"0 0 30px rgba(155,143,232,0.4)"}}>					
                 {user?.photoURL					
                   ? <img src={user.photoURL} alt="" style={{width:72,height:72,borderRadius:"50%",objectFit:"cover"}}/>					
@@ -2877,7 +2966,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
               return (					
                 <div key={n.category} onClick={()=>setActiveNode(isActive?null:n.category)}					
                   style={{position:"absolute",left:`calc(50% + ${pos.x}px)`,top:`calc(50% + ${pos.y}px)`,transform:"translate(-50%,-50%)",zIndex:3,cursor:"pointer"}}>					
-                  <div style={{background:isActive?`${cat.color}22`:T2.card,border:`2px solid ${isActive?cat.color:cat.color+"55"}`,borderRadius:14,padding:"10px 13px",width:110,textAlign:"center",transition:"all 0.2s",boxShadow:isActive?`0 0 20px ${cat.color}44`:"none"}}>					
+                  <div style={{background:isActive?`${cat.color}18`:T.card,border:`2px solid ${isActive?cat.color:cat.color+"55"}`,borderRadius:14,padding:"10px 13px",width:110,textAlign:"center",transition:"all 0.2s",boxShadow:isActive?`0 0 20px ${cat.color}44`:"none"}}>					
                     <div style={{fontSize:18,marginBottom:4}}>{cat.icon}</div>					
                     <div style={{fontSize:11,fontWeight:700,color:cat.color,marginBottom:4}}>{cat.label}</div>					
                     {/* Mini progress ring */}					
@@ -2927,7 +3016,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
               const cat = CATS_MM.find(c=>c.id===n.category)||CATS_MM[0];					
               return (					
                 <div key={n.category} onClick={()=>setActiveNode(activeNode===n.category?null:n.category)}					
-                  style={{background:T2.card,border:`1px solid ${activeNode===n.category?cat.color+"55":T2.border}`,borderRadius:12,padding:"13px 15px",cursor:"pointer",transition:"border-color 0.2s"}}>					
+                  style={{background:T.card,border:`1px solid ${activeNode===n.category?cat.color+"55":T.border}`,borderRadius:12,padding:"13px 15px",cursor:"pointer",transition:"border-color 0.2s"}}>					
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>					
                     <span style={{fontSize:13,color:cat.color,fontWeight:700}}>{cat.icon} {cat.label}</span>					
                     <span style={{fontSize:13,fontWeight:700,color:"#fff"}}>{n.progressPercent}%</span>					
@@ -2976,7 +3065,7 @@ function AdminPanel({ currentUser }) {
   };					
   useEffect(()=>{ load(); }, []);					
   const estCost = (totalCalls * 0.03).toFixed(2);					
-  const T2 = {card:"#13151E",border:"rgba(255,255,255,0.07)"};					
+  const T2 = {card:T.card,border:T.border};					
   return (					
     <div>					
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>					
@@ -3162,10 +3251,17 @@ export default function App() {
     await signInWithEmailAndPassword(auth, email, password);					
   };					
   const handleEmailSignup = async (email, password, name) => {					
+    const domain = email.split("@")[1]?.toLowerCase() || "";					
+    // Allow .edu emails explicitly regardless of other checks					
+    if (!domain.endsWith(".edu") && DISPOSABLE_DOMAINS.has(domain)) {					
+      throw new Error("This email domain isn't supported. Please use your real email address.");					
+    }					
     const cred = await createUserWithEmailAndPassword(auth, email, password);					
     if (name && cred.user) {					
       await cred.user.updateProfile({ displayName: name }).catch(()=>{});					
     }					
+    // Send verification email for non-Google signups					
+    try { await sendEmailVerification(cred.user); } catch(e) {}					
   };					
   const handleLogout = () => {					
     signOut(auth);					
