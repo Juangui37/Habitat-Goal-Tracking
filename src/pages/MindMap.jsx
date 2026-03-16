@@ -71,12 +71,6 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
   const T2 = {card:T.card,border:T.border};
   const firstName = user?.displayName?.split(" ")[0] || "You";
 
-  // Calculate node positions in a circle
-  const getPosition = (i, total, radius=190) => {
-    const angle = (i / total) * 2 * Math.PI - Math.PI / 2;
-    return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
-  };
-
   const activeNodeData = activeNode && mapData ? mapData.find(n=>n.category===activeNode) : null;
   const activeCat = activeNode ? CATS_MM.find(c=>c.id===activeNode) : null;
 
@@ -112,52 +106,85 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
 
       {mapData&&!loading&&(
         <div>
-          {/* SVG Mind Map */}
-          <div style={{position:"relative",height:520,marginBottom:24,overflow:"hidden"}}>
-            <svg width="100%" height="520" style={{position:"absolute",inset:0}}>
-              {mapData.map((n,i)=>{
-                const pos = getPosition(i, mapData.length);
-                const cx = "50%", cy = 260;
-                return (
-                  <line key={n.category}
-                    x1="50%" y1={cy}
-                    x2={`calc(50% + ${pos.x}px)`} y2={cy + pos.y}
-                    stroke="rgba(155,143,232,0.2)" strokeWidth="1.5" strokeDasharray="4 4"/>
-                );
-              })}
-            </svg>
+          {/* SVG Mind Map — pure viewBox, scales to any screen */}
+          {(()=>{
+            // Fixed coordinate space: 800 x 600 viewBox
+            // Center at (400, 300), radius scales with node count
+            const VW = 800, VH = 600, CX = 400, CY = 300;
+            const count = mapData.length;
+            // More nodes → smaller radius so they all fit
+            const radius = count <= 4 ? 220 : count <= 6 ? 210 : count <= 8 ? 195 : 180;
+            // Node card size in SVG units
+            const NW = 110, NH = 86;
 
-            {/* Center node */}
-            <div style={{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",zIndex:2,textAlign:"center"}}>
-              <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:"0 0 30px rgba(155,143,232,0.4)"}}>
-                {user?.photoURL
-                  ? <img src={user.photoURL} alt="" style={{width:72,height:72,borderRadius:"50%",objectFit:"cover"}}/>
-                  : <span style={{fontSize:24}}>✦</span>}
-              </div>
-              <div style={{textAlign:"center",marginTop:6,fontSize:11,fontWeight:700,color:"#fff"}}>{firstName}</div>
-            </div>
+            const nodePos = mapData.map((_, i) => {
+              const angle = (i / count) * 2 * Math.PI - Math.PI / 2;
+              return { x: CX + Math.cos(angle) * radius, y: CY + Math.sin(angle) * radius };
+            });
 
-            {/* Category nodes */}
-            {mapData.map((n,i)=>{
-              const pos = getPosition(i, mapData.length);
-              const cat = CATS_MM.find(c=>c.id===n.category)||CATS_MM[0];
-              const isActive = activeNode===n.category;
-              return (
-                <div key={n.category} onClick={()=>setActiveNode(isActive?null:n.category)}
-                  style={{position:"absolute",left:`calc(50% + ${pos.x}px)`,top:`calc(50% + ${pos.y}px)`,transform:"translate(-50%,-50%)",zIndex:3,cursor:"pointer"}}>
-                  <div style={{background:isActive?`${cat.color}18`:T.card,border:`2px solid ${isActive?cat.color:cat.color+"55"}`,borderRadius:14,padding:"10px 13px",width:110,textAlign:"center",transition:"all 0.2s",boxShadow:isActive?`0 0 20px ${cat.color}44`:"none"}}>
-                    <div style={{fontSize:18,marginBottom:4}}>{cat.icon}</div>
-                    <div style={{fontSize:11,fontWeight:700,color:cat.color,marginBottom:4}}>{cat.label}</div>
-                    {/* Mini progress ring */}
-                    <div style={{fontSize:16,fontWeight:800,color:"#fff"}}>{n.progressPercent}%</div>
-                    <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.1)",marginTop:4}}>
-                      <div style={{height:"100%",borderRadius:2,background:cat.color,width:`${n.progressPercent}%`,transition:"width 0.6s"}}/>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{display:"block",marginBottom:16,maxHeight:"60vh"}}
+                xmlns="http://www.w3.org/2000/svg">
+
+                {/* Connection lines */}
+                {mapData.map((n, i) => {
+                  const pos = nodePos[i];
+                  const cat = CATS_MM.find(c=>c.id===n.category)||CATS_MM[0];
+                  return (
+                    <line key={n.category+"line"}
+                      x1={CX} y1={CY} x2={pos.x} y2={pos.y}
+                      stroke={cat.color} strokeOpacity="0.25" strokeWidth="1.5" strokeDasharray="5 4"/>
+                  );
+                })}
+
+                {/* Center circle */}
+                <circle cx={CX} cy={CY} r={44} fill="url(#centerGrad)" filter="url(#glow)"/>
+                <defs>
+                  <radialGradient id="centerGrad">
+                    <stop offset="0%" stopColor="#9B8FE8"/>
+                    <stop offset="100%" stopColor="#7EB8D4"/>
+                  </radialGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="4" result="blur"/>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                  </filter>
+                </defs>
+                <text x={CX} y={CY+5} textAnchor="middle" fontSize="20" fill="white">✦</text>
+                <text x={CX} y={CY+62} textAnchor="middle" fontSize="11" fontWeight="700" fill="white" fontFamily="DM Sans, system-ui">{firstName}</text>
+
+                {/* Category nodes */}
+                {mapData.map((n, i) => {
+                  const pos = nodePos[i];
+                  const cat = CATS_MM.find(c=>c.id===n.category)||CATS_MM[0];
+                  const isActive = activeNode === n.category;
+                  const nx = pos.x - NW/2, ny = pos.y - NH/2;
+                  return (
+                    <g key={n.category} onClick={()=>setActiveNode(isActive?null:n.category)}
+                      style={{cursor:"pointer"}}>
+                      {/* Card background */}
+                      <rect x={nx} y={ny} width={NW} height={NH} rx="10"
+                        fill={isActive ? cat.color+"22" : T.card}
+                        stroke={isActive ? cat.color : cat.color+"77"}
+                        strokeWidth={isActive ? 2 : 1.5}
+                        filter={isActive ? "url(#glow)" : "none"}/>
+                      {/* Icon */}
+                      <text x={pos.x} y={ny+22} textAnchor="middle" fontSize="16">{cat.icon}</text>
+                      {/* Label */}
+                      <text x={pos.x} y={ny+38} textAnchor="middle" fontSize="10" fontWeight="700"
+                        fill={cat.color} fontFamily="DM Sans, system-ui">{cat.label}</text>
+                      {/* Progress % */}
+                      <text x={pos.x} y={ny+56} textAnchor="middle" fontSize="15" fontWeight="800"
+                        fill="white" fontFamily="DM Sans, system-ui">{n.progressPercent}%</text>
+                      {/* Progress bar track */}
+                      <rect x={nx+10} y={ny+63} width={NW-20} height={4} rx="2" fill="rgba(255,255,255,0.1)"/>
+                      {/* Progress bar fill */}
+                      <rect x={nx+10} y={ny+63} width={Math.max(2,(NW-20)*n.progressPercent/100)} height={4} rx="2" fill={cat.color}/>
+                    </g>
+                  );
+                })}
+              </svg>
+            );
+          })()}
 
           {/* Active node detail */}
           {activeNodeData&&activeCat&&(

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import {APP_NAME , APP_TAGLINE} from "../constants/index.js"
 import { T } from "../constants/theme.js";
 
 function SettingsPage({ user, demoMode, onLogout, darkMode, setDarkMode, diaryPin, setDiaryPin }) {
