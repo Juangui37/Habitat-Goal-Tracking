@@ -194,7 +194,6 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
               {!generatedGoal&&generatedGoals.length===0&&(
                 <>
                   <textarea value={goalInput} onChange={e=>setGoalInput(e.target.value)}
-                    placeholder={"One goal: "I want to get stronger and gain muscle"\n\nOr paste anything: journal notes, a list of goals, a long description — AI reads it all and extracts every goal it finds."}
                     rows={4}
                     style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,padding:"13px 15px",color:"#fff",fontSize:13,outline:"none",resize:"vertical",fontFamily:"inherit",lineHeight:1.6,boxSizing:"border-box",marginBottom:12}}/>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
