@@ -176,7 +176,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
           if (c.id !== "all" && cnt === 0) return null;
           return (
             <button key={c.id} onClick={()=>setActiveCat(c.id)}
-              style={{flexShrink:0,padding:"8px 16px",borderRadius:20,border:`1.5px solid ${activeCat===c.id?c.color:"rgba(255,255,255,0.1)"}`,background:activeCat===c.id?`${c.color}18`:"transparent",color:activeCat===c.id?c.color:T.muted,cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit"}}>
+              style={{flexShrink:0,padding:"8px 16px",borderRadius:20,border:`1.5px solid ${activeCat===c.id?c.color:T.faint}`,background:activeCat===c.id?`${c.color}18`:"transparent",color:activeCat===c.id?c.color:T.muted,cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit"}}>
               {c.icon ? c.icon+" " : ""}{c.label} ({cnt})
             </button>
           );
@@ -196,7 +196,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
                 <span style={{fontSize:16}}>{cat.icon}</span>
-                <span style={{fontSize:13,fontWeight:700,color:"#fff"}}>{cat.label}</span>
+                <span style={{fontSize:13,fontWeight:700,color:T.text}}>{cat.label}</span>
                 <span style={{fontSize:10,color:cat.color,fontWeight:600}}>{catDone}/{catHabits.length}</span>
               </div>
               <div style={{height:3,width:80,borderRadius:2,background:"rgba(255,255,255,0.07)"}}>
@@ -241,7 +241,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
           <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:20,width:"min(560px,96vw)",maxHeight:"85vh",display:"flex",flexDirection:"column",overflow:"hidden"}}>
             <div style={{padding:"22px 24px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
-                <div style={{fontWeight:700,color:"#fff",fontSize:16}}>Habit Presets</div>
+                <div style={{fontWeight:700,color:T.text,fontSize:16}}>Habit Presets</div>
                 <div style={{fontSize:11,color:T.muted,marginTop:2}}>Pick a category and add ready-made habits</div>
               </div>
               <button onClick={()=>{setShowPresets(false);setSelectedPresets({});}} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 14px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>

@@ -31,13 +31,28 @@ function WeeklyWrapped({ habits, habitLogs, goals, reminders, diary, onClose, us
         } catch(e) {}
       }
       setRateLimitChecked(true);
-      generateSummary();
+      generateSummary(false);  // use cache if available
     };
     checkAndGenerate();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const generateSummary = async () => {
+  const generateSummary = async (forceRefresh = false) => {
+    // Check Firestore cache first — if within 7 days, load cached result
+    if (!forceRefresh && user) {
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid, "meta", "wrappedCache"));
+        if (snap.exists()) {
+          const cached = snap.data();
+          const age = Date.now() - new Date(cached.generatedAt).getTime();
+          if (age < 7 * 24 * 60 * 60 * 1000) {
+            setSummary(cached.summary);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch(e) { /* cache miss — generate fresh */ }
+    }
     setLoading(true);
     const weekStart = new Date(); weekStart.setDate(weekStart.getDate()-7);
     const weekDates = [];
@@ -74,10 +89,13 @@ Keep it under 250 words. Be specific, warm, and direct. Make them feel seen.`;
     try {
       const result = await callClaude(prompt, null, 500);
       setSummary(result);
-      // Save rate limit timestamp
+      // Save rate limit timestamp + cache the result
       if (user) {
+        const now = new Date().toISOString();
         await setDoc(doc(db, "users", user.uid, "meta", "wrappedLastRun"),
-          { lastRun: new Date().toISOString() }, { merge: true }).catch(() => {});
+          { lastRun: now }, { merge: true }).catch(() => {});
+        await setDoc(doc(db, "users", user.uid, "meta", "wrappedCache"),
+          { summary: result, generatedAt: now }, { merge: true }).catch(() => {});
       }
     } catch(e) { setSummary(`Couldn't generate summary: ${e.message}`); }
     setLoading(false);
@@ -88,7 +106,10 @@ Keep it under 250 words. Be specific, warm, and direct. Make them feel seen.`;
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.95)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,backdropFilter:"blur(20px)"}}>
       <div style={{background:"linear-gradient(135deg,#0D0F18,#13151E)",border:"1px solid rgba(155,143,232,0.3)",borderRadius:24,width:"min(560px,96vw)",maxHeight:"85vh",overflowY:"auto",padding:"32px",position:"relative"}}>
-        <button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:8,padding:"6px 12px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕ Close</button>
+        <div style={{position:"absolute",top:16,right:16,display:"flex",gap:8}}>
+          {summary && !loading && <button onClick={()=>generateSummary(true)} style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.3)",borderRadius:8,padding:"6px 12px",color:"#9B8FE8",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>↺ Refresh</button>}
+          <button onClick={onClose} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:8,padding:"6px 12px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕ Close</button>
+        </div>
         <div style={{textAlign:"center",marginBottom:28}}>
           <div style={{fontSize:36,marginBottom:8}}>✦</div>
           <h2 style={{fontSize:24,fontWeight:700,color:"#fff",margin:"0 0 6px",letterSpacing:-0.5}}>Weekly Wrapped</h2>

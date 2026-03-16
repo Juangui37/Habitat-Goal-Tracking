@@ -9,6 +9,12 @@ import { JournalPanel } from "../components/JournalPanel.jsx";
 
 function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], user = null }) {
   const [analyticsTab, setAnalyticsTab] = useState("goals");
+  // Reset visible count when tab changes
+  const switchTab = (tab) => {
+    setAnalyticsTab(tab);
+    setVisibleGoals(5); setVisibleHabits(5); setVisibleReminders(5); setVisibleJournal(5);
+    setGoalCatFilter("all"); setHabitCatFilter("all"); setReminderCatFilter("all"); setJournalCatFilter("all");
+  };
   const [aiInsight, setAiInsight] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [insightTimestamp, setInsightTimestamp] = useState(null);
@@ -16,6 +22,16 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
   const [period, setPeriod] = useState("month");
   const [filterHabit, setFilterHabit] = useState("all");
   const [selectedHabitsChart, setSelectedHabitsChart] = useState([]);
+  // Pagination state
+  const [visibleGoals, setVisibleGoals] = useState(5);
+  const [visibleHabits, setVisibleHabits] = useState(5);
+  const [visibleReminders, setVisibleReminders] = useState(5);
+  const [visibleJournal, setVisibleJournal] = useState(5);
+  // Category filter state per tab
+  const [goalCatFilter, setGoalCatFilter] = useState("all");
+  const [habitCatFilter, setHabitCatFilter] = useState("all");
+  const [reminderCatFilter, setReminderCatFilter] = useState("all");
+  const [journalCatFilter, setJournalCatFilter] = useState("all");
 
   const getDates = (p) => {
     const dates = [], d = new Date();
@@ -202,7 +218,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
       {/* Analytics Tab Toggle */}
       <div style={{display:"flex",background:T.surface,borderRadius:14,padding:4,border:`1px solid ${T.border}`,marginBottom:20,width:"fit-content"}}>
         {[["goals","◎ Goals"],["habits","✦ Habits"],["reminders","🔔 Reminders"],["journal","📓 Journal"]].map(([id,label])=>(
-          <button key={id} onClick={()=>setAnalyticsTab(id)}
+          <button key={id} onClick={()=>switchTab(id)}
             style={{padding:"9px 28px",borderRadius:11,border:"none",background:analyticsTab===id?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"transparent",color:analyticsTab===id?"#fff":T.muted,cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit",transition:"all 0.2s"}}>
             {label}
           </button>
@@ -378,36 +394,57 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             ))}
           </div>
 
-          {/* Per-habit performance + streaks */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Habit Leaderboard</div>
-              <select value={filterHabit} onChange={e=>setFilterHabit(e.target.value)} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:"5px 10px",color:T.muted,fontSize:11,outline:"none",fontFamily:"inherit"}}>
-                <option value="all">All habits</option>
-                {habits.map(h=><option key={h.id} value={h.id}>{h.label}</option>)}
-              </select>
-            </div>
-            {filteredHabits.map((h,i)=>{
-              const {streak,best} = getStreakData(h.id);
-              return (
-                <div key={h.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:`1px solid ${i<filteredHabits.length-1?T.border:"transparent"}`}}>
-                  <span style={{fontSize:11,color:T.muted,width:18,textAlign:"right",fontWeight:700}}>{i+1}</span>
-                  <span style={{fontSize:16}}>{h.icon}</span>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:12,color:"#fff",fontWeight:600,marginBottom:3}}>{h.label}</div>
-                    <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)"}}>
-                      <div style={{height:"100%",borderRadius:2,background:h.pct>=80?"#4CAF82":h.pct>=50?"#C8A96E":"#E8645A",width:`${h.pct}%`,transition:"width 0.6s"}}/>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",gap:10,alignItems:"center"}}>
-                    {streak>0&&<span style={{fontSize:10,color:"#E8A45A"}}>🔥 {streak}d</span>}
-                    <span style={{fontSize:11,fontWeight:700,color:h.pct>=80?"#4CAF82":h.pct>=50?"#C8A96E":"#E8645A",minWidth:36,textAlign:"right"}}>{h.pct}%</span>
-                    <span style={{fontSize:10,color:T.muted,minWidth:50,textAlign:"right"}}>{h.done}/{h.applicable}d</span>
-                  </div>
+          {/* Per-habit performance + streaks — paginated + filtered */}
+          {(()=>{
+            const habitCats = [...new Set(habits.map(h=>h.category))];
+            const catFiltered = habitCatFilter==="all" ? filteredHabits : filteredHabits.filter(h=>h.category===habitCatFilter);
+            const visible = catFiltered.slice(0, visibleHabits);
+            return (
+              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+                <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>Habit Leaderboard</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+                  <button onClick={()=>setHabitCatFilter("all")} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${habitCatFilter==="all"?"#9B8FE8":T.border}`,background:habitCatFilter==="all"?"rgba(155,143,232,0.15)":"transparent",color:habitCatFilter==="all"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>All</button>
+                  {habitCats.map(id=>{const c=HAB_CATS.find(x=>x.id===id)||{id,icon:"◎",label:id,color:"#9B8FE8"};return(
+                    <button key={id} onClick={()=>{setHabitCatFilter(id);setVisibleHabits(5);}} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${habitCatFilter===id?c.color:T.border}`,background:habitCatFilter===id?`${c.color}20`:"transparent",color:habitCatFilter===id?c.color:T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>{c.icon} {c.label}</button>
+                  );})}
                 </div>
-              );
-            })}
-          </div>
+                {visible.map((h,i)=>{
+                  const {streak} = getStreakData(h.id);
+                  return (
+                    <div key={h.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:`1px solid ${i<visible.length-1?T.border:"transparent"}`}}>
+                      <span style={{fontSize:11,color:T.muted,width:18,textAlign:"right",fontWeight:700}}>{i+1}</span>
+                      <span style={{fontSize:16}}>{h.icon}</span>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:12,color:T.text,fontWeight:600,marginBottom:3}}>{h.label}</div>
+                        <div style={{height:4,borderRadius:2,background:T.faint}}>
+                          <div style={{height:"100%",borderRadius:2,background:h.pct>=80?"#4CAF82":h.pct>=50?"#C8A96E":"#E8645A",width:`${h.pct}%`,transition:"width 0.6s"}}/>
+                        </div>
+                        <div style={{display:"flex",gap:12,marginTop:4}}>
+                          <span style={{fontSize:10,color:T.muted}}>🔥 Best: <strong style={{color:T.text}}>{getLongestStreak(h.id)}d</strong></span>
+                          <span style={{fontSize:10,color:T.muted}}>📅 <strong style={{color:T.text}}>{getBestDay(h.id)}</strong></span>
+                        </div>
+                      </div>
+                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                        {streak>0&&<span style={{fontSize:10,color:"#E8A45A"}}>🔥{streak}d</span>}
+                        <span style={{fontSize:11,fontWeight:700,color:h.pct>=80?"#4CAF82":h.pct>=50?"#C8A96E":"#E8645A",minWidth:36,textAlign:"right"}}>{h.pct}%</span>
+                        <span style={{fontSize:10,color:T.muted,minWidth:50,textAlign:"right"}}>{h.done}/{h.applicable}d</span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {catFiltered.length > visibleHabits && (
+                  <button onClick={()=>setVisibleHabits(v=>v+5)} style={{width:"100%",background:"transparent",border:`1px solid ${T.border}`,borderRadius:9,padding:"9px",color:T.muted,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",marginTop:8}}>
+                    ▼ Show 5 more ({catFiltered.length - visibleHabits} remaining)
+                  </button>
+                )}
+                {visibleHabits > 5 && (
+                  <button onClick={()=>setVisibleHabits(5)} style={{width:"100%",background:"transparent",border:"none",padding:"6px",color:T.muted,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>
+                    ▲ Show less
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Consistency heatmap-style last 4 weeks */}
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>
@@ -453,35 +490,82 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             </div>
           </div>
 
-          {/* All goals progress list */}
+          {/* Goals by Priority — moved to top */}
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Goal Progress Breakdown</div>
-            {goalStats.map((g,i)=>{
-              const cat = CATS.find(c=>c.id===g.category)||CATS[0];
-              const dl = daysLeft(g.timebound);
-              const urgent = dl !== null && dl < 30;
-              return (
-                <div key={g.id} style={{padding:"11px 0",borderBottom:`1px solid ${i<goalStats.length-1?T.border:"transparent"}`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-                    <span style={{fontSize:15}}>{cat.icon}</span>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:12,color:"#fff",fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.title}</div>
-                      <div style={{display:"flex",gap:8,marginTop:2}}>
-                        <span style={{fontSize:9,color:cat.color,background:`${cat.color}18`,padding:"1px 6px",borderRadius:4,fontWeight:700}}>{cat.label}</span>
-                        <span style={{fontSize:9,color:g.priority==="High"?"#E8645A":g.priority==="Medium"?"#C8A96E":"#7EB8D4",fontWeight:600}}>{g.priority}</span>
-                        {dl !== null && <span style={{fontSize:9,color:urgent?"#E8645A":T.muted}}>{dl < 0 ? "Overdue" : `${dl}d left`}</span>}
-                      </div>
+            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Goals by Priority</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:11}}>
+              {["High","Medium","Low"].map(pri => {
+                const pg = goals.filter(g=>g.priority===pri);
+                const avg = pg.length>0?Math.round(pg.reduce((a,g)=>a+calcProgress(g),0)/pg.length):0;
+                const color = pri==="High"?"#E8645A":pri==="Medium"?"#C8A96E":"#7EB8D4";
+                return (
+                  <div key={pri} style={{background:T.inputBg,borderRadius:11,padding:"14px",border:`1px solid ${color}22`}}>
+                    <div style={{fontSize:10,color:T.muted,letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{pri} Priority</div>
+                    <div style={{fontSize:22,fontWeight:700,color,marginBottom:2}}>{pg.length}</div>
+                    <div style={{fontSize:10,color:T.muted,marginBottom:8}}>goals · {avg}% avg</div>
+                    <div style={{height:4,borderRadius:2,background:T.faint}}>
+                      <div style={{height:"100%",borderRadius:2,background:color,width:`${avg}%`}}/>
                     </div>
-                    <span style={{fontSize:13,fontWeight:700,color:g.pct>=75?"#4CAF82":g.pct>=40?"#C8A96E":"#E8645A",minWidth:38,textAlign:"right"}}>{g.pct}%</span>
                   </div>
-                  <div style={{height:5,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>
-                    <div style={{height:"100%",borderRadius:3,background:cat.color,width:`${g.pct}%`,transition:"width 0.6s"}}/>
-                  </div>
-                  <div style={{fontSize:10,color:T.muted,marginTop:4}}>{g.subtasks.filter(s=>s.done).length}/{g.subtasks.length} subtasks complete</div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
+
+          {/* Goal Progress Breakdown — paginated + filtered */}
+          {(()=>{
+            const goalCats = [...new Set(goals.map(g=>g.category))];
+            const filtered = goalCatFilter==="all" ? goalStats : goalStats.filter(g=>g.category===goalCatFilter);
+            const visible = filtered.slice(0, visibleGoals);
+            return (
+              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
+                  <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Goal Progress Breakdown</div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    <button onClick={()=>setGoalCatFilter("all")} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${goalCatFilter==="all"?"#9B8FE8":T.border}`,background:goalCatFilter==="all"?"rgba(155,143,232,0.15)":"transparent",color:goalCatFilter==="all"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>All</button>
+                    {goalCats.map(id=>{const c=CATS.find(x=>x.id===id)||{id,icon:"◎",label:id,color:"#9B8FE8"};return(
+                      <button key={id} onClick={()=>{setGoalCatFilter(id);setVisibleGoals(5);}} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${goalCatFilter===id?c.color:T.border}`,background:goalCatFilter===id?`${c.color}20`:"transparent",color:goalCatFilter===id?c.color:T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>{c.icon} {c.label}</button>
+                    );})}
+                  </div>
+                </div>
+                {visible.map((g,i)=>{
+                  const cat = CATS.find(c=>c.id===g.category)||CATS[0];
+                  const dl = daysLeft(g.timebound);
+                  const urgent = dl !== null && dl < 30;
+                  return (
+                    <div key={g.id} style={{padding:"11px 0",borderBottom:`1px solid ${i<visible.length-1?T.border:"transparent"}`}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                        <span style={{fontSize:15}}>{cat.icon}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,color:T.text,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.title}</div>
+                          <div style={{display:"flex",gap:8,marginTop:2}}>
+                            <span style={{fontSize:9,color:cat.color,background:`${cat.color}18`,padding:"1px 6px",borderRadius:4,fontWeight:700}}>{cat.label}</span>
+                            <span style={{fontSize:9,color:g.priority==="High"?"#E8645A":g.priority==="Medium"?"#C8A96E":"#7EB8D4",fontWeight:600}}>{g.priority}</span>
+                            {dl !== null && <span style={{fontSize:9,color:urgent?"#E8645A":T.muted}}>{dl < 0 ? "Overdue" : `${dl}d left`}</span>}
+                          </div>
+                        </div>
+                        <span style={{fontSize:13,fontWeight:700,color:g.pct>=75?"#4CAF82":g.pct>=40?"#C8A96E":"#E8645A",minWidth:38,textAlign:"right"}}>{g.pct}%</span>
+                      </div>
+                      <div style={{height:5,borderRadius:3,background:T.faint}}>
+                        <div style={{height:"100%",borderRadius:3,background:cat.color,width:`${g.pct}%`,transition:"width 0.6s"}}/>
+                      </div>
+                      <div style={{fontSize:10,color:T.muted,marginTop:4}}>{g.subtasks.filter(s=>s.done).length}/{g.subtasks.length} subtasks / milestones complete</div>
+                    </div>
+                  );
+                })}
+                {filtered.length > visibleGoals && (
+                  <button onClick={()=>setVisibleGoals(v=>v+5)} style={{width:"100%",background:"transparent",border:`1px solid ${T.border}`,borderRadius:9,padding:"9px",color:T.muted,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",marginTop:8}}>
+                    ▼ Show 5 more ({filtered.length - visibleGoals} remaining)
+                  </button>
+                )}
+                {visibleGoals > 5 && (
+                  <button onClick={()=>setVisibleGoals(5)} style={{width:"100%",background:"transparent",border:"none",padding:"6px",color:T.muted,cursor:"pointer",fontSize:11,fontFamily:"inherit",marginTop:2}}>
+                    ▲ Show less
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           {/* By category breakdown */}
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
@@ -499,27 +583,6 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             ))}
           </div>
 
-          {/* Priority breakdown */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Goals by Priority</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:11}}>
-              {["High","Medium","Low"].map(pri => {
-                const pg = goals.filter(g=>g.priority===pri);
-                const avg = pg.length>0?Math.round(pg.reduce((a,g)=>a+calcProgress(g),0)/pg.length):0;
-                const color = pri==="High"?"#E8645A":pri==="Medium"?"#C8A96E":"#7EB8D4";
-                return (
-                  <div key={pri} style={{background:"rgba(255,255,255,0.03)",borderRadius:11,padding:"14px",border:`1px solid ${color}22`}}>
-                    <div style={{fontSize:10,color:T.muted,letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>{pri} Priority</div>
-                    <div style={{fontSize:22,fontWeight:700,color,marginBottom:2}}>{pg.length}</div>
-                    <div style={{fontSize:10,color:T.muted,marginBottom:8}}>goals · {avg}% avg</div>
-                    <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)"}}>
-                      <div style={{height:"100%",borderRadius:2,background:color,width:`${avg}%`}}/>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
 
           {/* Upcoming deadlines */}
           {daysLeftData.length > 0 && (
@@ -599,27 +662,49 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             </div>
           </div>
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Recent Journal Entries</div>
-            {diary.length===0 ? <p style={{color:"rgba(255,255,255,0.25)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No journal entries yet</p> :
-              [...diary].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5).map(e=>{
-                const moodColors={great:"#4CAF82",good:"#C8A96E",neutral:"#7EB8D4",low:"#E8645A"};
-                const catColors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E"};
-                return (
-                  <div key={e.id} style={{padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Recent Journal Entries</div>
+            </div>
+            {(()=>{
+              const moodColors={great:"#4CAF82",good:"#C8A96E",neutral:"#7EB8D4",low:"#E8645A"};
+              const catColors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E"};
+              const journalCats = [...new Set(diary.flatMap(e=>e.categories||[]))];
+              const jFiltered = journalCatFilter==="all"
+                ? [...diary].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+                : [...diary].filter(e=>(e.categories||[]).includes(journalCatFilter)).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+              const jVisible = jFiltered.slice(0, visibleJournal);
+              if (diary.length===0) return <p style={{color:T.muted,fontSize:13,textAlign:"center",padding:"20px 0"}}>No journal entries yet</p>;
+              return (<>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+                  <button onClick={()=>setJournalCatFilter("all")} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${journalCatFilter==="all"?"#9B8FE8":T.border}`,background:journalCatFilter==="all"?"rgba(155,143,232,0.15)":"transparent",color:journalCatFilter==="all"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>All</button>
+                  {journalCats.map(id=>{const c=CATS.find(x=>x.id===id)||{id,icon:"◎",label:id,color:"#9B8FE8"};return(
+                    <button key={id} onClick={()=>{setJournalCatFilter(id);setVisibleJournal(5);}} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${journalCatFilter===id?c.color:T.border}`,background:journalCatFilter===id?`${c.color}20`:"transparent",color:journalCatFilter===id?c.color:T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>{c.icon} {c.label}</button>
+                  );})}
+                </div>
+                {jVisible.map(e=>(
+                  <div key={e.id} style={{padding:"12px 0",borderBottom:`1px solid ${T.border}`}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                         {(e.categories||[]).map(c=><span key={c} style={{fontSize:9,background:`${catColors[c]||"#9B8FE8"}22`,color:catColors[c]||"#9B8FE8",padding:"2px 7px",borderRadius:20,fontWeight:700,textTransform:"capitalize"}}>{c}</span>)}
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
                         {e.mood&&<span style={{fontSize:10,color:moodColors[e.mood]||"#9B8FE8",fontWeight:600,textTransform:"capitalize"}}>{e.mood}</span>}
-                        <span style={{fontSize:10,color:"rgba(255,255,255,0.25)"}}>{e.createdAt?.split("T")[0]||""}</span>
+                        <span style={{fontSize:10,color:T.muted}}>{e.createdAt?.split("T")[0]||""}</span>
                       </div>
                     </div>
-                    <p style={{fontSize:12,color:"rgba(255,255,255,0.6)",margin:0,lineHeight:1.5,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{e.text}</p>
+                    <p style={{fontSize:12,color:T.muted,margin:0,lineHeight:1.5,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{e.text}</p>
                   </div>
-                );
-              })
-            }
+                ))}
+                {jFiltered.length > visibleJournal && (
+                  <button onClick={()=>setVisibleJournal(v=>v+5)} style={{width:"100%",background:"transparent",border:`1px solid ${T.border}`,borderRadius:9,padding:"9px",color:T.muted,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",marginTop:8}}>
+                    ▼ Show 5 more ({jFiltered.length - visibleJournal} remaining)
+                  </button>
+                )}
+                {visibleJournal > 5 && (
+                  <button onClick={()=>setVisibleJournal(5)} style={{width:"100%",background:"transparent",border:"none",padding:"6px",color:T.muted,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>▲ Show less</button>
+                )}
+              </>);
+            })()}
           </div>
         </div>
       )}
@@ -664,23 +749,51 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             })()}
           </div>
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>Reminders + Goals Connection</div>
-            <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",marginBottom:14,lineHeight:1.5}}>How your reminders align with your life goals — AI categorizes each reminder to surface patterns.</p>
-            {["physical","financial","career","emotional","parenting","lifestyle","travel","religious"].map(cat=>{
-              const catReminders = reminders.filter(r=>r.category===cat);
-              const catGoals = goals.filter(g=>g.category===cat);
-              if(!catReminders.length && !catGoals.length) return null;
-              const colors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E"};
-              return (
-                <div key={cat} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-                  <span style={{fontSize:11,color:colors[cat],fontWeight:700,textTransform:"capitalize",minWidth:70}}>{cat}</span>
-                  <div style={{flex:1,display:"flex",gap:8}}>
-                    {catReminders.length>0&&<span style={{fontSize:10,background:`${colors[cat]}18`,color:colors[cat],padding:"2px 8px",borderRadius:20}}>{catReminders.length} reminder{catReminders.length>1?"s":""}</span>}
-                    {catGoals.length>0&&<span style={{fontSize:10,background:"rgba(155,143,232,0.15)",color:"#9B8FE8",padding:"2px 8px",borderRadius:20}}>{catGoals.length} goal{catGoals.length>1?"s":""}</span>}
-                  </div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Reminders List</div>
+            </div>
+            <p style={{fontSize:12,color:T.muted,marginBottom:14,lineHeight:1.5}}>How your reminders align with your life goals.</p>
+            {(()=>{
+              const remCats = [...new Set(reminders.map(r=>r.category||"general"))];
+              const rFiltered = reminderCatFilter==="all"
+                ? [...reminders].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+                : reminders.filter(r=>(r.category||"general")===reminderCatFilter).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+              const rVisible = rFiltered.slice(0, visibleReminders);
+              const colors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E",general:"#6B7280"};
+              return (<>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+                  <button onClick={()=>setReminderCatFilter("all")} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${reminderCatFilter==="all"?"#9B8FE8":T.border}`,background:reminderCatFilter==="all"?"rgba(155,143,232,0.15)":"transparent",color:reminderCatFilter==="all"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>All</button>
+                  {remCats.map(id=>{const c=CATS.find(x=>x.id===id)||{id,icon:"◎",label:id,color:"#9B8FE8"};return(
+                    <button key={id} onClick={()=>{setReminderCatFilter(id);setVisibleReminders(5);}} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${reminderCatFilter===id?c.color:T.border}`,background:reminderCatFilter===id?`${c.color}20`:"transparent",color:reminderCatFilter===id?c.color:T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>{c.icon} {c.label}</button>
+                  );})}
                 </div>
-              );
-            })}
+                {rVisible.map((r,i)=>{
+                  const cat = CATS.find(c=>c.id===r.category)||{icon:"◎",label:r.category||"general",color:colors[r.category]||"#9B8FE8"};
+                  return (
+                    <div key={r.id} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:`1px solid ${i<rVisible.length-1?T.border:"transparent"}`}}>
+                      <div style={{width:18,height:18,borderRadius:"50%",background:r.done?"#4CAF82":T.faint,border:`2px solid ${r.done?"#4CAF82":T.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
+                        {r.done&&<span style={{color:"#fff",fontSize:9,fontWeight:800}}>✓</span>}
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,color:r.done?T.muted:T.text,fontWeight:600,textDecoration:r.done?"line-through":"none",marginBottom:2}}>{r.text}</div>
+                        <div style={{display:"flex",gap:6}}>
+                          <span style={{fontSize:9,background:`${cat.color}18`,color:cat.color,padding:"1px 6px",borderRadius:20,fontWeight:700}}>{cat.icon} {cat.label}</span>
+                          {r.dueDate&&<span style={{fontSize:9,color:T.muted}}>{r.dueDate}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {rFiltered.length > visibleReminders && (
+                  <button onClick={()=>setVisibleReminders(v=>v+5)} style={{width:"100%",background:"transparent",border:`1px solid ${T.border}`,borderRadius:9,padding:"9px",color:T.muted,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",marginTop:8}}>
+                    ▼ Show 5 more ({rFiltered.length - visibleReminders} remaining)
+                  </button>
+                )}
+                {visibleReminders > 5 && (
+                  <button onClick={()=>setVisibleReminders(5)} style={{width:"100%",background:"transparent",border:"none",padding:"6px",color:T.muted,cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>▲ Show less</button>
+                )}
+              </>);
+            })()}
           </div>
         </div>
       )}
