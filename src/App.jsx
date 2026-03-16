@@ -61,6 +61,10 @@ export default function App() {
   const [showOnboarding, setShowOnboarding]   = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [emailVerified, setEmailVerified]     = useState(true);
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    try { return localStorage.getItem("lumina_profile_photo") || ""; } catch { return ""; }
+  });
+
   const [diaryPin, setDiaryPin] = useState(() => {
     try { return localStorage.getItem("lumina_diary_pin") || ""; } catch { return ""; }
   });
@@ -225,8 +229,8 @@ export default function App() {
         {tab==="reminders" && <RemindersPage reminders={reminders} saveReminder={saveReminder} deleteReminder={deleteReminder} toggleReminder={toggleReminder}/>}
         {tab==="diary"     && <DiaryPage entries={diary} saveEntry={saveDiaryEntry} deleteEntry={deleteDiaryEntry} diaryPin={diaryPin}/>}
         {tab==="analytics" && <AnalyticsPage habits={habits} habitLogs={habitLogs} goals={goals} reminders={reminders} diary={diary} user={user}/>}
-        {tab==="settings"  && <SettingsPage user={user} demoMode={demoMode} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} diaryPin={diaryPin} setDiaryPin={setDiaryPin}/>}
-        {tab==="mindmap"   && <MindMapPage user={user} goals={goals} habits={habits} habitLogs={habitLogs} diary={diary} reminders={reminders}/>}
+        {tab==="settings"  && <SettingsPage user={user} demoMode={demoMode} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} diaryPin={diaryPin} setDiaryPin={setDiaryPin} profilePhoto={profilePhoto} setProfilePhoto={setProfilePhoto}/>}
+        {tab==="mindmap"   && <MindMapPage user={user} goals={goals} habits={habits} habitLogs={habitLogs} diary={diary} reminders={reminders} profilePhoto={profilePhoto}/>}
         {tab==="admin"     && user?.uid===ADMIN_UID && <AdminPanel currentUser={user}/>}
       </div>
 

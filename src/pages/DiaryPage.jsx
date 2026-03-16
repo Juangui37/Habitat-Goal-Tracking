@@ -50,7 +50,8 @@ Return ONLY a JSON object: {"categories": ["emotional", "physical"], "summary": 
   const submitEntry = async () => {
     if (!entryText.trim() || entryText.trim().length < 10) return;
     setAiLoading(true);
-    const ai = await categorizeEntry(entryText);
+    let ai = { categories: ["lifestyle"], summary: "" };
+    try { ai = await categorizeEntry(entryText); } catch(e) { /* AI unavailable — save without categories */ }
     const entry = {
       id: `diary${Date.now()}`,
       text: entryText.trim(),
@@ -128,7 +129,7 @@ Respond ONLY with JSON: {"indices": [0, 3, 5], "explanation": "Found X entries a
       {/* Controls */}
       <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{display:"flex",gap:7}}>
-          <button onClick={()=>setViewMode("timeline")} style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${viewMode==="timeline"?"rgba(255,255,255,0.3)":T.border}`,background:viewMode==="timeline"?"rgba(255,255,255,0.1)":"transparent",color:viewMode==="timeline"?"#fff":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>📅 Timeline</button>
+          <button onClick={()=>setViewMode("timeline")} style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${viewMode==="timeline"?"rgba(255,255,255,0.3)":T.border}`,background:viewMode==="timeline"?"rgba(255,255,255,0.1)":"transparent",color:viewMode==="timeline"?T.text:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>📅 Timeline</button>
           <button onClick={()=>setViewMode("search")} style={{padding:"7px 14px",borderRadius:9,border:`1px solid ${viewMode==="search"?"rgba(155,143,232,0.6)":T.border}`,background:viewMode==="search"?"rgba(155,143,232,0.12)":"transparent",color:viewMode==="search"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>✦ AI Search</button>
         </div>
         <button onClick={()=>setShowWrite(true)}
@@ -147,7 +148,7 @@ Respond ONLY with JSON: {"indices": [0, 3, 5], "explanation": "Found X entries a
               onKeyDown={e=>e.key==="Enter"&&aiSearch()}
               style={{flex:1,background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"11px 14px",color:T.text,fontSize:13,outline:"none",fontFamily:"inherit"}}/>
             <button onClick={aiSearch} disabled={searchLoading||!searchQuery.trim()}
-              style={{background:searchQuery.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:10,padding:"11px 18px",color:searchQuery.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:searchQuery.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:12,fontFamily:"inherit"}}>
+              style={{background:searchQuery.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:10,padding:"11px 18px",color:searchQuery.trim()?T.text:T.muted,cursor:searchQuery.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:12,fontFamily:"inherit"}}>
               {searchLoading?"Searching...":"Search"}
             </button>
           </div>
@@ -204,7 +205,7 @@ Respond ONLY with JSON: {"indices": [0, 3, 5], "explanation": "Found X entries a
                     {expanded ? e.text : e.text.slice(0,180)+(e.text.length>180?"...":"")}
                   </div>
                 </div>
-                <button onClick={()=>deleteEntry(e.id)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.15)",cursor:"pointer",fontSize:13,padding:"2px 4px",flexShrink:0}}>✕</button>
+                <button onClick={()=>deleteEntry(e.id)} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:13,padding:"2px 4px",flexShrink:0}}>✕</button>
               </div>
               {e.text.length > 180 && (
                 <button onClick={()=>setExpandedId(expanded?null:e.id)} style={{background:"none",border:"none",color:"#9B8FE8",cursor:"pointer",fontSize:11,fontWeight:600,padding:0,fontFamily:"inherit"}}>

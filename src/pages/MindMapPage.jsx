@@ -7,7 +7,7 @@ import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
 import { JournalPanel } from "../components/JournalPanel.jsx";
 
-function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
+function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profilePhoto }) {
   const [mapData, setMapData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -137,8 +137,6 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
                   );
                 })}
 
-                {/* Center circle */}
-                <circle cx={CX} cy={CY} r={44} fill="url(#centerGrad)" filter="url(#glow)"/>
                 <defs>
                   <radialGradient id="centerGrad">
                     <stop offset="0%" stopColor="#9B8FE8"/>
@@ -148,9 +146,28 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
                     <feGaussianBlur stdDeviation="4" result="blur"/>
                     <feComposite in="SourceGraphic" in2="blur" operator="over"/>
                   </filter>
+                  <clipPath id="centerClip">
+                    <circle cx={CX} cy={CY} r={44}/>
+                  </clipPath>
                 </defs>
-                <text x={CX} y={CY+5} textAnchor="middle" fontSize="20" fill="white">✦</text>
-                <text x={CX} y={CY+62} textAnchor="middle" fontSize="11" fontWeight="700" fill="white" fontFamily="DM Sans, system-ui">{firstName}</text>
+                {/* Center circle — gradient bg */}
+                <circle cx={CX} cy={CY} r={44} fill="url(#centerGrad)" filter="url(#glow)"/>
+                {/* Profile photo if available */}
+                {(user?.photoURL || profilePhoto) && (
+                  <image
+                    href={user?.photoURL || profilePhoto}
+                    x={CX-44} y={CY-44} width={88} height={88}
+                    clipPath="url(#centerClip)"
+                    preserveAspectRatio="xMidYMid slice"
+                  />
+                )}
+                {/* Fallback icon if no photo */}
+                {!user?.photoURL && !profilePhoto && (
+                  <text x={CX} y={CY+7} textAnchor="middle" fontSize="24" fill="white">✦</text>
+                )}
+                {/* Name label below circle */}
+                <text x={CX} y={CY+62} textAnchor="middle" fontSize="11" fontWeight="700"
+                  fill={T.text} fontFamily="DM Sans, system-ui">{firstName}</text>
 
                 {/* Category nodes */}
                 {mapData.map((n, i) => {

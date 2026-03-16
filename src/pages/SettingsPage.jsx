@@ -1,8 +1,8 @@
 import { useState } from "react";
-import {APP_NAME , APP_TAGLINE} from "../constants/index.js"
 import { T } from "../constants/theme.js";
+import { APP_NAME, APP_TAGLINE } from "../constants/index.js";
 
-function SettingsPage({ user, demoMode, onLogout, darkMode, setDarkMode, diaryPin, setDiaryPin }) {
+function SettingsPage({ user, demoMode, onLogout, darkMode, setDarkMode, diaryPin, setDiaryPin, profilePhoto, setProfilePhoto }) {
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
@@ -15,6 +15,18 @@ function SettingsPage({ user, demoMode, onLogout, darkMode, setDarkMode, diaryPi
     setDiaryPin(pinInput);
     setPinError(""); setPinSuccess(true);
     setTimeout(()=>{ setShowPinSetup(false); setPinInput(""); setPinConfirm(""); setPinSuccess(false); }, 1500);
+  };
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try { localStorage.setItem("lumina_profile_photo", ev.target.result); } catch {}
+      setProfilePhoto(ev.target.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const Section = ({title, children}) => (
@@ -47,13 +59,32 @@ function SettingsPage({ user, demoMode, onLogout, darkMode, setDarkMode, diaryPi
 
       <Section title="Account">
         {!demoMode && user ? (
-          <Row icon={user.photoURL ? <img src={user.photoURL} style={{width:36,height:36,borderRadius:10}} alt=""/> : "👤"}
+          <Row icon={(profilePhoto || user.photoURL) ? <img src={profilePhoto || user.photoURL} style={{width:36,height:36,borderRadius:10,objectFit:"cover"}} alt=""/> : "👤"}
             label={user.displayName || user.email || "User"}
             sub={user.email || "Signed in"}
             right={<span style={{fontSize:11,color:"#4CAF82",fontWeight:600}}>Active</span>}
           />
         ) : (
           <Row icon="👤" label="Demo Mode" sub="Sign in to save your data" />
+        )}
+        {!demoMode && user && (
+          <label style={{display:"flex",alignItems:"center",gap:14,padding:"11px 0",borderBottom:`1px solid ${T.border}`,cursor:"pointer"}}>
+            <div style={{width:36,height:36,borderRadius:10,background:"rgba(155,143,232,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>📷</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:600,color:T.text}}>Profile Photo</div>
+              <div style={{fontSize:11,color:T.muted,marginTop:1}}>{profilePhoto?"Custom photo set — click to change":"Upload a photo for your Mind Map"}</div>
+            </div>
+            <span style={{fontSize:11,color:"#9B8FE8",fontWeight:600}}>{profilePhoto?"Change":"Upload →"}</span>
+            <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{display:"none"}}/>
+          </label>
+        )}
+        {!demoMode && user && profilePhoto && (
+          <div style={{paddingTop:8,paddingBottom:4}}>
+            <button onClick={()=>{try{localStorage.removeItem("lumina_profile_photo");}catch{}setProfilePhoto("");}}
+              style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit",padding:0}}>
+              Remove custom photo
+            </button>
+          </div>
         )}
         <div style={{paddingTop:4}}>
           <button onClick={onLogout}

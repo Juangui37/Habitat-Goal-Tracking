@@ -217,7 +217,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
           ))}
         </div>
         <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
-          <button onClick={()=>getAIInsight(true)} disabled={aiLoading}
+          <button onClick={()=>getAIInsight(!!aiInsight)} disabled={aiLoading}
             style={{background:"linear-gradient(135deg,#9B8FE8,#E87AAF)",border:"none",borderRadius:10,padding:"9px 18px",color:"#fff",cursor:aiLoading?"not-allowed":"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",opacity:aiLoading?0.7:1}}>
             {aiLoading?"Analyzing...":aiInsight?"↺ Refresh Insight":"✦ AI Insight"}
           </button>
@@ -246,45 +246,121 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
           </div>
 
           {/* Daily bar chart */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Daily Completion Rate</div>
-            <div style={{display:"flex",alignItems:"flex-end",gap:period==="year"?1:period==="halfyear"?2:period==="quarter"?2:3,height:90,overflow:"hidden"}}>
-              {dailyData.map((d,i)=>(
-                <div key={i} title={`${d.date}: ${d.pct}% (${d.done}/${d.total})`}
-                  style={{flex:1,minWidth:0,background:d.pct===100?"#4CAF82":d.pct>70?"#9B8FE8":d.pct>40?"#C8A96E":"rgba(255,255,255,0.1)",borderRadius:"2px 2px 0 0",height:`${Math.max((d.pct/maxBar)*100,d.pct>0?4:2)}%`,transition:"height 0.3s",cursor:"pointer"}}/>
-              ))}
-            </div>
-            <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
-              <span style={{fontSize:10,color:T.muted}}>{dates[0]}</span>
-              <span style={{fontSize:10,color:T.muted}}>{dates[dates.length-1]}</span>
-            </div>
-            <div style={{display:"flex",gap:12,marginTop:10,flexWrap:"wrap"}}>
-              {[["#4CAF82","100%"],["#9B8FE8",">70%"],["#C8A96E",">40%"],["rgba(255,255,255,0.2)","<40%"]].map(([c,l])=>(
-                <div key={l} style={{display:"flex",alignItems:"center",gap:5}}>
-                  <div style={{width:10,height:10,borderRadius:2,background:c}}/>
-                  <span style={{fontSize:10,color:T.muted}}>{l}</span>
+          {(()=>{
+            // Color bins — 7 tiers, traffic-light gradient from grey → gold → green
+            const barColor = pct => {
+              if (pct === 0)   return T.faint;         // 0% — no data / rest day
+              if (pct <= 20)   return "#4A3F5C";        // 1–20% — very low, dark muted purple
+              if (pct <= 40)   return "#7B6C9E";        // 21–40% — low, soft purple
+              if (pct <= 60)   return "#C8A96E";        // 41–60% — below average, amber
+              if (pct <= 75)   return "#E8A45A";        // 61–75% — decent, orange
+              if (pct <= 90)   return "#9B8FE8";        // 76–90% — good, brand purple
+              if (pct < 100)   return "#4CAF82";        // 91–99% — great, green
+              return "#00E676";                         // 100% — perfect, bright green
+            };
+            const bins = [
+              [T.faint, "0%"],
+              ["#4A3F5C", "1–20%"],
+              ["#7B6C9E", "21–40%"],
+              ["#C8A96E", "41–60%"],
+              ["#E8A45A", "61–75%"],
+              ["#9B8FE8", "76–90%"],
+              ["#4CAF82", "91–99%"],
+              ["#00E676", "100% 🎯"],
+            ];
+            return (
+              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+                <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Daily Completion Rate</div>
+                <div style={{display:"flex",alignItems:"flex-end",gap:period==="year"?1:period==="halfyear"?2:period==="quarter"?2:3,height:100,overflow:"hidden"}}>
+                  {dailyData.map((d,i)=>(
+                    <div key={i} title={`${d.date}: ${d.pct}% (${d.done}/${d.total})`}
+                      style={{
+                        flex:1, minWidth:0,
+                        background: barColor(d.pct),
+                        borderRadius:"2px 2px 0 0",
+                        // Height strictly proportional to 100 — a 50% day is half the container
+                        height: d.pct > 0 ? `${Math.max(d.pct, 2)}%` : "2%",
+                        transition:"height 0.4s ease",
+                        cursor:"pointer",
+                      }}/>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
+                  <span style={{fontSize:10,color:T.muted}}>{dates[0]}</span>
+                  <span style={{fontSize:10,color:T.muted}}>{dates[dates.length-1]}</span>
+                </div>
+                <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
+                  {bins.map(([c,l])=>(
+                    <div key={l} style={{display:"flex",alignItems:"center",gap:4}}>
+                      <div style={{width:9,height:9,borderRadius:2,background:c,border:c===T.faint?`1px solid ${T.border}`:"none"}}/>
+                      <span style={{fontSize:9,color:T.muted}}>{l}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Day-of-week breakdown */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Best Days of the Week</div>
-            <div style={{display:"flex",gap:8,alignItems:"flex-end",height:80}}>
-              {dayOfWeekData.map((d,i) => {
-                const isWeekend = d.dow===0||d.dow===6;
-                const color = isWeekend ? "#7EB8D4" : "#9B8FE8";
-                return (
-                  <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
-                    <span style={{fontSize:10,color:color,fontWeight:700}}>{d.avg}%</span>
-                    <div style={{width:"100%",borderRadius:"3px 3px 0 0",background:color,height:`${Math.max(d.avg,3)}%`,minHeight:4,transition:"height 0.5s"}}/>
-                    <span style={{fontSize:10,color:T.muted}}>{d.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {(()=>{
+            const dowMax = Math.max(...dayOfWeekData.map(d=>d.avg), 1);
+            // Color by performance tier — same scale as daily chart
+            const dowColor = pct => {
+              if (pct === 0) return T.faint;
+              if (pct <= 20) return "#4A3F5C";
+              if (pct <= 40) return "#7B6C9E";
+              if (pct <= 60) return "#C8A96E";
+              if (pct <= 75) return "#E8A45A";
+              if (pct <= 90) return "#9B8FE8";
+              if (pct < 100) return "#4CAF82";
+              return "#00E676";
+            };
+            const bestDow = dayOfWeekData.reduce((best,d) => d.avg > best.avg ? d : best, dayOfWeekData[0]);
+            return (
+              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                  <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Best Days of the Week</div>
+                  {bestDow && bestDow.avg > 0 && (
+                    <span style={{fontSize:11,color:"#4CAF82",fontWeight:700}}>🏆 {bestDow.label} avg {bestDow.avg}%</span>
+                  )}
+                </div>
+                <div style={{display:"flex",gap:6,alignItems:"flex-end",height:100}}>
+                  {dayOfWeekData.map((d,i) => {
+                    const color = dowColor(d.avg);
+                    // Height: proportional to 100 (not to max), so you see absolute performance
+                    const heightPct = d.avg > 0 ? Math.max(d.avg, 3) : 2;
+                    const isBest = d.label === bestDow?.label && d.avg > 0;
+                    return (
+                      <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                        <span style={{fontSize:10,color:color,fontWeight:700}}>{d.avg > 0 ? `${d.avg}%` : "—"}</span>
+                        <div style={{
+                          width:"100%",
+                          borderRadius:"3px 3px 0 0",
+                          background: color,
+                          height:`${heightPct}%`,
+                          minHeight: 3,
+                          transition:"height 0.5s ease",
+                          boxShadow: isBest ? `0 0 8px ${color}88` : "none",
+                        }}/>
+                        <span style={{fontSize:10,color:isBest?color:T.muted,fontWeight:isBest?700:400}}>{d.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:10}}>
+                  <span style={{fontSize:10,color:T.muted}}>Heights = absolute % of habits completed (not relative to each other)</span>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Show more habits button — moved outside the DOW chart */}
+          {filteredHabits.length > 5 && (
+            <button onClick={()=>setShowAllHabits(v=>!v)}
+              style={{width:"100%",background:"transparent",border:`1px solid ${T.border}`,borderRadius:9,padding:"8px",color:T.muted,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",marginBottom:18}}>
+              {showAllHabits ? `▲ Show less` : `▼ Show all ${filteredHabits.length} habits`}
+            </button>
+          )}
 
           {/* Category breakdown */}
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>

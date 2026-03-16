@@ -34,28 +34,28 @@ function GoalCard({ goal, onToggleSubtask, onDelete, onEdit, onAddNote }) {   �
         </div>        
         <div style={{textAlign:"right",flexShrink:0,minWidth:55}}>        
           {dl!==null&&<div style={{fontSize:10,color:dl<14?"#E8645A":T.muted,fontWeight:600,whiteSpace:"nowrap"}}>{dl>0?`${dl}d left`:dl===0?"Due today":`${Math.abs(dl)}d over`}</div>}        
-          <div style={{fontSize:15,color:"rgba(255,255,255,0.18)",marginTop:3}}>{expanded?"▲":"▼"}</div>        
+          <div style={{fontSize:15,color:T.muted,marginTop:3}}>{expanded?"▲":"▼"}</div>       
         </div>        
       </div>        
       {expanded&&(        
         <div style={{padding:"0 21px 21px",borderTop:`1px solid ${T.border}`}}>       
           <div style={{marginTop:13,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>       
             {[["S","Specific",goal.specific],["M","Measurable",goal.measurable],["A","Achievable",goal.achievable],["R","Relevant",goal.relevant],["T","Time-bound",goal.timebound]].map(([l,lbl,val])=>val&&(        
-              <div key={l} style={{background:"rgba(255,255,255,0.03)",borderRadius:9,padding:"10px 12px",gridColumn:l==="T"?"span 2":"auto"}}>       
+              <div key={l} style={{background:T.inputBg,borderRadius:9,padding:"10px 12px",gridColumn:l==="T"?"span 2":"auto"}}>        
                 <div style={{fontSize:9,color:cat.color,fontWeight:800,letterSpacing:2,marginBottom:3,textTransform:"uppercase"}}>{l} — {lbl}</div>       
-                <p style={{fontSize:12,color:"rgba(255,255,255,0.58)",margin:0,lineHeight:1.45}}>{val}</p>        
+                <p style={{fontSize:12,color:T.muted,margin:0,lineHeight:1.45}}>{val}</p>       
               </div>        
             ))}       
           </div>        
           {goal.subtasks.length>0&&(        
             <div style={{marginTop:13}}>        
-              <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Subtasks</div>       
+              <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Subtasks / Milestones</div>        
               {goal.subtasks.map(s=>(       
-                <div key={s.id} onClick={()=>onToggleSubtask(goal.id,s.id)} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"8px 10px",borderRadius:8,background:"rgba(255,255,255,0.02)",marginBottom:5}}>        
-                  <div style={{width:16,height:16,borderRadius:5,border:`2px solid ${s.done?cat.color:"rgba(255,255,255,0.2)"}`,background:s.done?cat.color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>        
+                <div key={s.id} onClick={()=>onToggleSubtask(goal.id,s.id)} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"8px 10px",borderRadius:8,background:T.inputBg,marginBottom:5}}>       
+                  <div style={{width:16,height:16,borderRadius:5,border:`2px solid ${s.done?cat.color:T.faint}`,background:s.done?cat.color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>        
                     {s.done&&<span style={{color:"#fff",fontSize:9,fontWeight:800}}>✓</span>}       
                   </div>        
-                  <span style={{fontSize:13,color:s.done?"rgba(255,255,255,0.28)":"rgba(255,255,255,0.75)",textDecoration:s.done?"line-through":"none"}}>{s.label}</span>       
+                  <span style={{fontSize:13,color:s.done?T.muted:T.text,textDecoration:s.done?"line-through":"none"}}>{s.label}</span>        
                 </div>        
               ))}       
             </div>        
@@ -92,7 +92,7 @@ function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJo
           <div key={x.l} style={{background:T.card,borderRadius:13,padding:"15px 17px",border:`1px solid ${T.border}`}}>        
             <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>        
             <div style={{fontSize:27,fontWeight:700,color:x.c,letterSpacing:-1}}>{x.v}</div>        
-            <div style={{fontSize:10,color:"rgba(255,255,255,0.2)",marginTop:2}}>{x.s}</div>        
+            <div style={{fontSize:10,color:T.muted,marginTop:2}}>{x.s}</div>        
           </div>        
         ))}       
       </div>        
@@ -100,17 +100,17 @@ function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJo
         {CATS.map(c=>{const cg=goals.filter(g=>g.category===c.id);if(!cg.length)return null;const avg=Math.round(cg.reduce((a,g)=>a+calcProgress(g),0)/cg.length);return(       
           <div key={c.id} onClick={()=>setActiveCat(ac=>ac===c.id?"all":c.id)} style={{background:activeCat===c.id?`${c.color}12`:T.card,border:`1px solid ${activeCat===c.id?c.color+"55":T.border}`,borderRadius:11,padding:"12px 13px",cursor:"pointer",transition:"all 0.2s"}}>       
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:14}}>{c.icon}</span><span style={{fontSize:11,fontWeight:700,color:c.color}}>{avg}%</span></div>       
-            <div style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,0.62)",marginBottom:5}}>{c.label}</div>       
+            <div style={{fontSize:11,fontWeight:600,color:T.text,marginBottom:5}}>{c.label}</div>       
             <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.06)"}}><div style={{height:"100%",borderRadius:2,background:c.color,width:`${avg}%`,transition:"width 0.6s"}}/></div>       
-            <div style={{fontSize:9,color:"rgba(255,255,255,0.22)",marginTop:4}}>{cg.length} goal{cg.length>1?"s":""}</div>       
+            <div style={{fontSize:9,color:T.muted,marginTop:4}}>{cg.length} goal{cg.length>1?"s":""}</div>        
           </div>        
         );})}       
       </div>        
       <div style={{display:"flex",gap:8,marginBottom:13,flexWrap:"wrap"}}>        
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="⌕  Search goals..."        
-          style={{flex:"1 1 170px",background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"9px 13px",color:"#fff",fontSize:12,outline:"none",fontFamily:"inherit"}}/>       
+          style={{flex:"1 1 170px",background:T.card,border:`1px solid ${T.border}`,borderRadius:10,padding:"9px 13px",color:T.text,fontSize:12,outline:"none",fontFamily:"inherit"}}/>       
         {["all","High","Medium","Low"].map(p=>(       
-          <button key={p} onClick={()=>setActivePri(p)} style={{padding:"9px 14px",borderRadius:10,border:`1px solid ${activePri===p?"rgba(255,255,255,0.3)":T.border}`,background:activePri===p?"rgba(255,255,255,0.08)":"transparent",color:activePri===p?"#fff":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>        
+          <button key={p} onClick={()=>setActivePri(p)} style={{padding:"9px 14px",borderRadius:10,border:`1px solid ${activePri===p?"rgba(255,255,255,0.3)":T.border}`,background:activePri===p?"rgba(255,255,255,0.08)":"transparent",color:activePri===p?T.text:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>        
             {p==="all"?"All":p}       
           </button>       
         ))}       
@@ -118,14 +118,14 @@ function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJo
       {filtered.length===0?(
         <div style={{textAlign:"center",padding:"60px 0"}}>
           <div style={{fontSize:48,marginBottom:16}}>◎</div>
-          <h3 style={{color:"#fff",fontWeight:700,fontSize:18,margin:"0 0 8px"}}>No goals yet</h3>
+          <h3 style={{color:T.text,fontWeight:700,fontSize:18,margin:"0 0 8px"}}>No goals yet</h3>
           <p style={{color:T.muted,fontSize:13,margin:"0 0 28px",lineHeight:1.6}}>Start by creating your first SMART goal,<br/>or let the AI Coach guide you.</p>
           <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
             <button onClick={()=>setShowModal(true)} style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:11,padding:"12px 24px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>+ Create First Goal</button>
             <button onClick={()=>setShowAI(true)} style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.3)",borderRadius:11,padding:"12px 24px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>✦ AI Coach</button>
             {onImportDemoGoals && <button onClick={onImportDemoGoals} style={{background:"rgba(76,175,130,0.1)",border:"1px solid rgba(76,175,130,0.3)",borderRadius:11,padding:"12px 24px",color:"#4CAF82",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>⬇ Import Sample Goals</button>}
           </div>
-          {onImportDemoGoals && <p style={{fontSize:11,color:"rgba(255,255,255,0.15)",marginTop:16}}>Import sample goals to explore the app — you can edit or delete them anytime.</p>}
+          {onImportDemoGoals && <p style={{fontSize:11,color:T.muted,marginTop:16}}>Import sample goals to explore the app — you can edit or delete them anytime.</p>}
         </div>
       )       
         :(filtered.map(g=><GoalCard key={g.id} goal={g} onToggleSubtask={toggleSubtask} onDelete={deleteGoal} onEdit={eg=>{setEditGoal(eg);setShowModal(true);}} onAddNote={addJournalNote}/>))}        

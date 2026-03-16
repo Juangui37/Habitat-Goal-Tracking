@@ -2,38 +2,43 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "../firebase.js";
 import { doc, setDoc, deleteDoc, collection, getDoc } from "firebase/firestore";
 import { T } from "../constants/theme.js";
-import { CATS, HAB_CATS, PRESET_HABITS, DAY_SCHEDULES, DAY_LABELS, todayStr, calcProgress, daysLeft, ADMIN_UID } from "../constants/index.js";
+import { CATS, HAB_CATS, PRESET_HABITS, DAY_SCHEDULES, DAY_LABELS, todayStr, calcProgress, daysLeft, ADMIN_UID, fmtDate } from "../constants/index.js";
 import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
 import { JournalPanel } from "../components/JournalPanel.jsx";
 
 function WeeklyWrapped({ habits, habitLogs, goals, reminders, diary, onClose, user }) {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState(null);
   const [nextAvailable, setNextAvailable] = useState(null);
+  const [rateLimitChecked, setRateLimitChecked] = useState(false);
   const loadMsg = useLoadingMessage(loading);
 
-  // Rate limit check
+  // Rate limit check — then auto-generate if not rate-limited
   useEffect(() => {
-    if (!user || user.uid === ADMIN_UID) return;
-    const checkLimit = async () => {
-      try {
-        const { getDoc } = await import("firebase/firestore");
-        const snap = await getDoc(doc(db, "users", user.uid, "meta", "wrappedLastRun"));
-        if (snap.exists()) {
-          const next = new Date(new Date(snap.data().lastRun).getTime() + 7*24*60*60*1000);
-          if (next > new Date()) setNextAvailable(next);
-        }
-      } catch(e) {}
+    const checkAndGenerate = async () => {
+      if (user && user.uid !== ADMIN_UID) {
+        try {
+          const snap = await getDoc(doc(db, "users", user.uid, "meta", "wrappedLastRun"));
+          if (snap.exists()) {
+            const next = new Date(new Date(snap.data().lastRun).getTime() + 7*24*60*60*1000);
+            if (next > new Date()) {
+              setNextAvailable(next);
+              setRateLimitChecked(true);
+              return; // rate limited — don't generate
+            }
+          }
+        } catch(e) {}
+      }
+      setRateLimitChecked(true);
+      generateSummary();
     };
-    checkLimit();
-  }, [user]);
-
-  useEffect(() => {
-    generateSummary();
+    checkAndGenerate();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generateSummary = async () => {
+    setLoading(true);
     const weekStart = new Date(); weekStart.setDate(weekStart.getDate()-7);
     const weekDates = [];
     for (let i=6; i>=0; i--) { const d=new Date(); d.setDate(d.getDate()-i); weekDates.push(d.toISOString().split("T")[0]); }
@@ -69,7 +74,12 @@ Keep it under 250 words. Be specific, warm, and direct. Make them feel seen.`;
     try {
       const result = await callClaude(prompt, null, 500);
       setSummary(result);
-    } catch { setSummary("Couldn't generate summary. Try again later."); }
+      // Save rate limit timestamp
+      if (user) {
+        await setDoc(doc(db, "users", user.uid, "meta", "wrappedLastRun"),
+          { lastRun: new Date().toISOString() }, { merge: true }).catch(() => {});
+      }
+    } catch(e) { setSummary(`Couldn't generate summary: ${e.message}`); }
     setLoading(false);
   };
 

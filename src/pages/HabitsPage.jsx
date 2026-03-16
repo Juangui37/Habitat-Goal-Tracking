@@ -213,20 +213,20 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
                   <div key={h.id}
                     style={{background:done?`${h.color}10`:notToday?"rgba(255,255,255,0.02)":T.card,border:`1px solid ${done?h.color+"44":T.border}`,borderRadius:12,padding:"13px 16px",display:"flex",alignItems:"center",gap:13,transition:"all 0.2s",opacity:notToday?0.45:1}}
                     onClick={() => !notToday && toggle(h.id)}>
-                    <div style={{width:26,height:26,borderRadius:8,border:`2px solid ${done?h.color:"rgba(255,255,255,0.2)"}`,background:done?h.color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.25s",cursor:notToday?"default":"pointer"}}>
+                    <div style={{width:26,height:26,borderRadius:8,border:`2px solid ${done?h.color:T.faint}`,background:done?h.color:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.25s",cursor:notToday?"default":"pointer"}}>
                       {done&&<span style={{color:"#fff",fontSize:13,fontWeight:800}}>✓</span>}
                     </div>
                     <div style={{flex:1}}>
-                      <div style={{fontSize:13,fontWeight:600,color:done?"rgba(255,255,255,0.45)":"#fff",textDecoration:done?"line-through":"none"}}>{h.label}</div>
+                      <div style={{fontSize:13,fontWeight:600,color:done?T.muted:T.text,textDecoration:done?"line-through":"none"}}>{h.label}</div>
                       <div style={{display:"flex",gap:8,marginTop:2,alignItems:"center"}}>
                         {streak>0&&<span style={{fontSize:10,color:h.color}}>🔥 {streak}d streak</span>}
-                        <span style={{fontSize:9,color:"rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.05)",padding:"1px 6px",borderRadius:4}}>{schedLabel}</span>
+                        <span style={{fontSize:9,color:T.muted,background:T.inputBg,padding:"1px 6px",borderRadius:4}}>{schedLabel}</span>
                         {notToday && <span style={{fontSize:9,color:T.muted}}>not scheduled today</span>}
                       </div>
                     </div>
                     <span style={{fontSize:18,opacity:done?1:0.3,transition:"opacity 0.2s"}}>{h.icon}</span>
-                    <button onClick={e=>{e.stopPropagation();openEdit(h);}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:12,padding:"2px 5px",fontFamily:"inherit"}} title="Edit">✎</button>
-                    <button onClick={e=>{e.stopPropagation();deleteHabit(h.id);}} style={{background:"none",border:"none",color:"rgba(255,255,255,0.15)",cursor:"pointer",fontSize:13,padding:"2px 4px",fontFamily:"inherit"}} title="Delete">✕</button>
+                    <button onClick={e=>{e.stopPropagation();openEdit(h);}} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:12,padding:"2px 5px",fontFamily:"inherit"}} title="Edit">✎</button>
+                    <button onClick={e=>{e.stopPropagation();deleteHabit(h.id);}} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:13,padding:"2px 4px",fontFamily:"inherit"}} title="Delete">✕</button>
                   </div>
                 );
               })}
@@ -274,7 +274,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
                       {(alreadyAdded||isSelected)&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
                     </div>
                     <span style={{fontSize:20,opacity:alreadyAdded?0.4:1}}>{p.icon}</span>
-                    <span style={{flex:1,fontSize:13,color:alreadyAdded?"rgba(255,255,255,0.35)":"#fff",fontWeight:500,textDecoration:alreadyAdded?"line-through":"none"}}>{p.label}</span>
+                    <span style={{flex:1,fontSize:13,color:alreadyAdded?T.muted:T.text,fontWeight:500,textDecoration:alreadyAdded?"line-through":"none"}}>{p.label}</span>
                     {alreadyAdded&&<span style={{fontSize:10,color:"#4CAF82",fontWeight:700}}>Already added</span>}
                   </div>
                 );
