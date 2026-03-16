@@ -11,7 +11,7 @@ function JournalPanel({ goal, onAddNote, onClose, catColor }) {
         <button onClick={onClose} style={{background:"none",border:"none",color:"rgba(255,255,255,0.38)",cursor:"pointer",fontSize:17,fontFamily:"inherit"}}>✕</button>
       </div>
       <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="How is this goal going? What did you do today?" rows={3}
-        style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:9,padding:"11px",color:"#fff",fontSize:13,resize:"none",outline:"none",fontFamily:"inherit",lineHeight:1.6,boxSizing:"border-box"}}/>
+        style={{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:9,padding:"11px",color:T.text,fontSize:13,resize:"none",outline:"none",fontFamily:"inherit",lineHeight:1.6,boxSizing:"border-box"}}/>
       <button onClick={()=>{if(!note.trim())return;onAddNote(goal.id,{date:todayStr(),note:note.trim()});setNote("");}}
         style={{marginTop:8,background:catColor,border:"none",borderRadius:8,padding:"9px 18px",color:"#fff",cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"inherit"}}>Add Entry</button>
       <div style={{display:"flex",flexDirection:"column",gap:9,maxHeight:170,overflowY:"auto",marginTop:11}}>

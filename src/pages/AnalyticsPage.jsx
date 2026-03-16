@@ -7,10 +7,11 @@ import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
 import { JournalPanel } from "../components/JournalPanel.jsx";
 
-function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] }) {
+function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], user = null }) {
   const [analyticsTab, setAnalyticsTab] = useState("goals");
   const [aiInsight, setAiInsight] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [insightTimestamp, setInsightTimestamp] = useState(null);
   const aiLoadMsg = useLoadingMessage(aiLoading);
   const [period, setPeriod] = useState("month");
   const [filterHabit, setFilterHabit] = useState("all");
@@ -103,29 +104,96 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
   const onTrack = goals.filter(g=>calcProgress(g)>=50).length;
   const needsWork = goals.filter(g=>calcProgress(g)<25 && g.subtasks.length>0).length;
 
-  const getAIInsight = async () => {
-    setAiLoading(true); setAiInsight("");
+  const getAIInsight = async (forceRefresh = false) => {
+    // Check Firestore cache first (24hr TTL)
+    if (!forceRefresh && user) {
+      try {
+        const cacheKey = `insight_${analyticsTab}_${period}`;
+        const snap = await getDoc(doc(db, "users", user.uid, "aiCache", cacheKey));
+        if (snap.exists()) {
+          const cached = snap.data();
+          const age = Date.now() - new Date(cached.generatedAt).getTime();
+          if (age < 24 * 60 * 60 * 1000) {
+            setAiInsight(cached.text);
+            setInsightTimestamp(cached.generatedAt);
+            return;
+          }
+        }
+      } catch(e) { /* cache miss — proceed to generate */ }
+    }
+
+    setAiLoading(true); setAiInsight(""); setInsightTimestamp(null);
     const topHabits = habitStats.slice(0,5).map(h=>`${h.label}: ${h.pct}%`).join(", ");
-    const lowHabits = habitStats.slice(-3).map(h=>`${h.label}: ${h.pct}%`).join(", ");
+    const lowHabits = [...habitStats].sort((a,b)=>a.pct-b.pct).slice(0,3).map(h=>`${h.label}: ${h.pct}%`).join(", ");
     const goalSummary = goals.slice(0,5).map(g=>`${g.title}: ${calcProgress(g)}%`).join("; ");
     const avgPct = Math.round(dailyData.reduce((a,d)=>a+d.pct,0)/Math.max(dailyData.length,1));
-    const prompt = `You are a personal performance coach. ${analyticsTab==="habits"?`Here's habit tracking data for the past ${period}: Top habits: ${topHabits}. Habits needing work: ${lowHabits}. Avg daily completion: ${avgPct}%. Write a warm, direct 3-paragraph insight: celebrate what's working, identify the key pattern, give one concrete action this week. Under 200 words.`:`Here's goal progress data: ${goalSummary}. Overall avg: ${overallGoalPct}%. ${onTrack} goals on track, ${needsWork} needing attention. Write a warm, direct 3-paragraph insight: celebrate momentum, identify the key gap, give one focused action this week. Under 200 words.`}`;
+
+    let prompt = "";
+    if (analyticsTab === "habits") {
+      prompt = `Personal performance coach. Habit data for ${period}: Top habits: ${topHabits}. Needs work: ${lowHabits}. Avg daily completion: ${avgPct}%. Write warm, direct 3-paragraph insight: celebrate what's working, identify key pattern, give one concrete action. Under 200 words.`;
+    } else if (analyticsTab === "goals") {
+      prompt = `Personal performance coach. Goal progress: ${goalSummary}. Overall avg: ${overallGoalPct}%. ${onTrack} on track, ${needsWork} need attention. Write warm, direct 3-paragraph insight: celebrate momentum, identify key gap, give one focused action. Under 200 words.`;
+    } else if (analyticsTab === "journal") {
+      const moodCounts = diary.reduce((acc,e)=>{acc[e.mood||"neutral"]=(acc[e.mood||"neutral"]||0)+1;return acc;},{});
+      const topMoods = Object.entries(moodCounts).sort((a,b)=>b[1]-a[1]).map(([m,c])=>`${m}:${c}`).join(", ");
+      const catCounts = diary.flatMap(e=>e.categories||[]).reduce((acc,c)=>{acc[c]=(acc[c]||0)+1;return acc;},{});
+      const topCats = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([c,n])=>`${c}:${n}`).join(", ");
+      prompt = `Personal growth coach analyzing journal. ${diary.length} entries. Moods: ${topMoods}. Topics: ${topCats}. Total words: ${diary.reduce((a,e)=>a+(e.wordCount||0),0)}. Write warm 3-paragraph reflection: what writing reveals, themes emerging, one journaling prompt for this week. Under 200 words.`;
+    } else if (analyticsTab === "reminders") {
+      const done = reminders.filter(r=>r.done).length;
+      const catBreak = reminders.reduce((acc,r)=>{const c=r.category||"general";acc[c]=(acc[c]||0)+1;return acc;},{});
+      const catSummary = Object.entries(catBreak).map(([c,n])=>`${c}:${n}`).join(", ");
+      prompt = `Productivity coach. Reminders: ${done}/${reminders.length} completed. Categories: ${catSummary}. Recent: ${reminders.slice(0,5).map(r=>r.text).join("; ")}. Write warm 3-paragraph insight: what reminders reveal about priorities, patterns, one follow-through suggestion. Under 200 words.`;
+    }
+
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,messages:[{role:"user",content:prompt}]})});
-      const data = await res.json();
-      setAiInsight(data.content?.map(b=>b.text||"").join("")||"Could not generate insight.");
-    } catch(e) { setAiInsight("Connection error. Try again."); }
+      const text = await callClaude(prompt, null, 400);
+      setAiInsight(text);
+      const now = new Date().toISOString();
+      setInsightTimestamp(now);
+      // Cache in Firestore
+      if (user) {
+        const cacheKey = `insight_${analyticsTab}_${period}`;
+        await setDoc(doc(db, "users", user.uid, "aiCache", cacheKey), {
+          text, generatedAt: now, tab: analyticsTab, period
+        }).catch(()=>{});
+      }
+    } catch(e) { setAiInsight(`Could not generate insight: ${e.message}`); }
     setAiLoading(false);
   };
 
   const maxBar = Math.max(...dailyData.map(d=>d.pct),1);
+  // Longest streak ever per habit
+  const getLongestStreak = (hid) => {
+    let longest = 0, current = 0;
+    const allDates = Object.keys(habitLogs).sort();
+    for (const date of allDates) {
+      if (habitLogs[date]?.[hid]) { current++; longest = Math.max(longest, current); }
+      else { current = 0; }
+    }
+    return longest;
+  };
+
+  // Best day of week (0=Sun...6=Sat)
+  const getBestDay = (hid) => {
+    const counts = [0,0,0,0,0,0,0], totals = [0,0,0,0,0,0,0];
+    for (const [date, log] of Object.entries(habitLogs)) {
+      const dow = new Date(date+"T12:00:00").getDay();
+      totals[dow]++;
+      if (log[hid]) counts[dow]++;
+    }
+    const rates = totals.map((t,i)=>t>2?counts[i]/t:0);
+    const best = rates.indexOf(Math.max(...rates));
+    return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][best];
+  };
+
   const filteredHabits = filterHabit==="all" ? habitStats : habitStats.filter(h=>h.id===filterHabit);
 
   const StatCard = ({label,value,sub,color}) => (
     <div style={{background:T.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T.border}`}}>
       <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{label}</div>
       <div style={{fontSize:24,fontWeight:700,color,letterSpacing:-1}}>{value}</div>
-      <div style={{fontSize:10,color:"rgba(255,255,255,0.18)",marginTop:2}}>{sub}</div>
+      <div style={{fontSize:10,color:T.muted,marginTop:2}}>{sub}</div>
     </div>
   );
 
@@ -148,9 +216,13 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
             <button key={k} onClick={()=>setPeriod(k)} style={{padding:"7px 13px",borderRadius:9,border:`1px solid ${period===k?"rgba(255,255,255,0.35)":T.border}`,background:period===k?"rgba(255,255,255,0.1)":"transparent",color:period===k?"#fff":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>{l}</button>
           ))}
         </div>
-        <button onClick={getAIInsight} disabled={aiLoading} style={{background:"linear-gradient(135deg,#9B8FE8,#E87AAF)",border:"none",borderRadius:10,padding:"9px 18px",color:"#fff",cursor:aiLoading?"not-allowed":"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",opacity:aiLoading?0.7:1}}>
-          {aiLoading?"Analyzing...":"✦ AI Insight"}
-        </button>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+          <button onClick={()=>getAIInsight(true)} disabled={aiLoading}
+            style={{background:"linear-gradient(135deg,#9B8FE8,#E87AAF)",border:"none",borderRadius:10,padding:"9px 18px",color:"#fff",cursor:aiLoading?"not-allowed":"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",opacity:aiLoading?0.7:1}}>
+            {aiLoading?"Analyzing...":aiInsight?"↺ Refresh Insight":"✦ AI Insight"}
+          </button>
+          {insightTimestamp&&!aiLoading&&<span style={{fontSize:10,color:T.muted}}>Updated {new Date(insightTimestamp).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}</span>}
+        </div>
       </div>
 
       {/* AI Insight */}
@@ -158,7 +230,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
         <div style={{background:"linear-gradient(135deg,rgba(155,143,232,0.1),rgba(232,122,175,0.08))",border:"1px solid rgba(155,143,232,0.3)",borderRadius:14,padding:"20px 22px",marginBottom:18}}>
           <div style={{fontSize:10,color:"#9B8FE8",fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>✦ AI Coach Insight</div>
           {aiLoading?<div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{display:"flex",gap:5}}>{[0,1,2].map(i=><div key={i} style={{width:7,height:7,borderRadius:"50%",background:"rgba(155,143,232,0.8)",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div><span style={{fontSize:12,color:"rgba(155,143,232,0.7)"}}>{aiLoadMsg}</span></div>
-            :<p style={{fontSize:13,color:"rgba(255,255,255,0.75)",margin:0,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{aiInsight}</p>}
+            :<p style={{fontSize:13,color:T.muted,margin:0,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{aiInsight}</p>}
         </div>
       )}
 
@@ -220,7 +292,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
             {catStats.map(c=>(
               <div key={c.id} style={{marginBottom:12}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",fontWeight:600}}>{c.icon} {c.label} <span style={{color:T.muted,fontWeight:400,fontSize:11}}>({c.count} habits)</span></span>
+                  <span style={{fontSize:13,color:T.muted,fontWeight:600}}>{c.icon} {c.label} <span style={{color:T.muted,fontWeight:400,fontSize:11}}>({c.count} habits)</span></span>
                   <span style={{fontSize:12,fontWeight:700,color:c.color}}>{c.avg}%</span>
                 </div>
                 <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>
@@ -248,7 +320,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
                   <div style={{flex:1}}>
                     <div style={{fontSize:12,color:"#fff",fontWeight:600,marginBottom:3}}>{h.label}</div>
                     <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)"}}>
-                      <div style={{height:"100%",borderRadius:2,background:h.color,width:`${h.pct}%`,transition:"width 0.6s"}}/>
+                      <div style={{height:"100%",borderRadius:2,background:h.pct>=80?"#4CAF82":h.pct>=50?"#C8A96E":"#E8645A",width:`${h.pct}%`,transition:"width 0.6s"}}/>
                     </div>
                   </div>
                   <div style={{display:"flex",gap:10,alignItems:"center"}}>
@@ -423,7 +495,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
               return Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([cat,count])=>(
                 <div key={cat} style={{marginBottom:12}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-                    <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",fontWeight:600,textTransform:"capitalize"}}>{cat}</span>
+                    <span style={{fontSize:13,color:T.muted,fontWeight:600,textTransform:"capitalize"}}>{cat}</span>
                     <span style={{fontSize:12,fontWeight:700,color:colors[cat]||"#9B8FE8"}}>{count} {count===1?"entry":"entries"}</span>
                   </div>
                   <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>
@@ -504,7 +576,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [] })
                 return (
                   <div key={cat} style={{marginBottom:14}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-                      <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",fontWeight:600,textTransform:"capitalize"}}>{cat}</span>
+                      <span style={{fontSize:13,color:T.muted,fontWeight:600,textTransform:"capitalize"}}>{cat}</span>
                       <span style={{fontSize:12,fontWeight:700,color:colors[cat]||"#9B8FE8"}}>{done}/{total} done</span>
                     </div>
                     <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>

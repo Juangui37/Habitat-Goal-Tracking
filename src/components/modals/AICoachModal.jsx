@@ -168,7 +168,7 @@ Output format (JSON array only):
             <div style={{flex:1,overflowY:"auto",padding:"18px 22px",display:"flex",flexDirection:"column",gap:12}}>
               {msgs.map((m,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start"}}>
-                  <div style={{maxWidth:"83%",padding:"12px 15px",borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.role==="user"?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.05)",color:"#fff",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap",border:m.role==="assistant"?`1px solid ${T2.border}`:"none"}}>{m.content}</div>
+                  <div style={{maxWidth:"83%",padding:"12px 15px",borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.role==="user"?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.05)",color:T.text,fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap",border:m.role==="assistant"?`1px solid ${T2.border}`:"none"}}>{m.content}</div>
                 </div>
               ))}
               {loading&&<div style={{display:"flex"}}><div style={{padding:"12px 16px",borderRadius:"16px 16px 16px 4px",background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,display:"flex",gap:5,alignItems:"center"}}>{[0,1,2].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",background:"rgba(155,143,232,0.8)",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div></div>}
@@ -187,7 +187,7 @@ Output format (JSON array only):
             </div>
             <div style={{padding:"14px 22px",borderTop:`1px solid ${T2.border}`,display:"flex",gap:10}}>
               <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&sendChat()} placeholder="Describe a goal you want to work toward..."
-                style={{flex:1,background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"12px 15px",color:"#fff",fontSize:13,outline:"none",fontFamily:"inherit"}}/>
+                style={{flex:1,background:"rgba(255,255,255,0.05)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"12px 15px",color:T.text,fontSize:13,outline:"none",fontFamily:"inherit"}}/>
               <button onClick={sendChat} disabled={loading||!input.trim()} style={{background:input.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"0 20px",color:input.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:input.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:13,fontFamily:"inherit"}}>Send</button>
             </div>
           </>
@@ -200,12 +200,12 @@ Output format (JSON array only):
               /* Step 1: paste text */
               <div style={{flex:1,display:"flex",flexDirection:"column",padding:"20px 22px",gap:14}}>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#fff",marginBottom:4}}>Paste anything — I will find your goals</div>
+                  <div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:4}}>Paste anything — I will find your goals</div>
                   <p style={{fontSize:12,color:T2.muted,margin:0,lineHeight:1.6}}>Paste notes, journal entries, voice transcriptions, or anything describing what you want to achieve. The AI will extract every goal, make it SMART, and let you review before adding.</p>
                 </div>
                 <textarea value={bulkText} onChange={e=>setBulkText(e.target.value)}
                   placeholder={"Examples:\n• Your GOALS.txt file\n• A brain dump of things you want to accomplish\n• A journal entry about your aspirations\n• Notes from a therapy session\n• A voice-to-text recording of your thoughts\n\nPaste it all — the messier the better."}
-                  style={{flex:1,background:"rgba(255,255,255,0.04)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"14px 16px",color:"#fff",fontSize:13,outline:"none",resize:"none",fontFamily:"inherit",lineHeight:1.6}}/>
+                  style={{flex:1,background:"rgba(255,255,255,0.04)",border:`1px solid ${T2.border}`,borderRadius:12,padding:"14px 16px",color:T.text,fontSize:13,outline:"none",resize:"none",fontFamily:"inherit",lineHeight:1.6}}/>
                 {bulkError && <div style={{background:"rgba(232,100,90,0.1)",border:"1px solid rgba(232,100,90,0.3)",borderRadius:10,padding:"12px 14px",color:"#E8645A",fontSize:12,lineHeight:1.5}}>{bulkError}</div>}
                 <button onClick={runBulkExtract} disabled={bulkLoading||!bulkText.trim()}
                   style={{background:bulkText.trim()?"linear-gradient(135deg,#9B8FE8,#7EB8D4)":"rgba(255,255,255,0.06)",border:"none",borderRadius:12,padding:"14px",color:bulkText.trim()?"#fff":"rgba(255,255,255,0.2)",cursor:bulkText.trim()?"pointer":"not-allowed",fontWeight:700,fontSize:14,fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
@@ -218,7 +218,7 @@ Output format (JSON array only):
               /* Done state */
               <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12}}>
                 <div style={{fontSize:40}}>🎉</div>
-                <div style={{fontSize:18,fontWeight:700,color:"#fff"}}>{selectedCount} goal{selectedCount!==1?"s":""} added!</div>
+                <div style={{fontSize:18,fontWeight:700,color:T.text}}>{selectedCount} goal{selectedCount!==1?"s":""} added!</div>
                 <p style={{fontSize:13,color:T2.muted,textAlign:"center"}}>Head to your Goals tab to review and edit them.</p>
               </div>
             ) : (
@@ -255,7 +255,7 @@ Output format (JSON array only):
                               <span style={{fontSize:10,color:g.priority==="High"?"#E8645A":g.priority==="Medium"?"#C8A96E":"#4CAF82",fontWeight:600}}>{g.priority}</span>
                               <span style={{fontSize:10,color:"rgba(255,255,255,0.25)"}}>Due {g.timebound}</span>
                             </div>
-                            <div style={{fontSize:13,fontWeight:700,color:"#fff",marginBottom:6}}>{g.title}</div>
+                            <div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:6}}>{g.title}</div>
                             <div style={{fontSize:11,color:"rgba(255,255,255,0.5)",lineHeight:1.4,marginBottom:6}}>{g.specific}</div>
                             {g.subtasks.length>0&&(
                               <div style={{display:"flex",flexWrap:"wrap",gap:4}}>

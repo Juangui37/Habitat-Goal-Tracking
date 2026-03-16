@@ -220,11 +220,11 @@ export default function App() {
 
       {/* ── Pages ── */}
       <div style={{maxWidth:920,margin:"0 auto",padding:"22px 18px"}}>
-        {tab==="goals"     && <GoalsPage goals={goals} setGoals={setGoals} saveGoal={saveGoal} deleteGoal={deleteGoal} toggleSubtask={toggleSubtask} addJournalNote={addJournalNote} setShowAI={setShowAI} setShowModal={setShowModal} setEditGoal={setEditGoal} onImportDemoGoals={!demoMode?()=>SEED_GOALS.forEach(g=>saveGoal({...g,id:"import_"+g.id})):null}/>}
+        {tab==="goals"     && <GoalsPage goals={goals} setGoals={setGoals} saveGoal={saveGoal} deleteGoal={deleteGoal} toggleSubtask={toggleSubtask} addJournalNote={addJournalNote} setShowAI={setShowAI} setShowModal={setShowModal} setEditGoal={setEditGoal} onImportDemoGoals={!demoMode?()=>SEED_GOALS.forEach(g=>saveGoal({...g,id:"import_"+g.id})):null} diary={diary} user={user}/>}
         {tab==="habits"    && <HabitsPage habits={habits} saveHabit={saveHabit} deleteHabit={deleteHabit} habitLogs={habitLogs} toggleHabitLog={toggleHabitLog} addHabits={addHabits}/>}
         {tab==="reminders" && <RemindersPage reminders={reminders} saveReminder={saveReminder} deleteReminder={deleteReminder} toggleReminder={toggleReminder}/>}
         {tab==="diary"     && <DiaryPage entries={diary} saveEntry={saveDiaryEntry} deleteEntry={deleteDiaryEntry} diaryPin={diaryPin}/>}
-        {tab==="analytics" && <AnalyticsPage habits={habits} habitLogs={habitLogs} goals={goals} reminders={reminders} diary={diary}/>}
+        {tab==="analytics" && <AnalyticsPage habits={habits} habitLogs={habitLogs} goals={goals} reminders={reminders} diary={diary} user={user}/>}
         {tab==="settings"  && <SettingsPage user={user} demoMode={demoMode} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} diaryPin={diaryPin} setDiaryPin={setDiaryPin}/>}
         {tab==="mindmap"   && <MindMapPage user={user} goals={goals} habits={habits} habitLogs={habitLogs} diary={diary} reminders={reminders}/>}
         {tab==="admin"     && user?.uid===ADMIN_UID && <AdminPanel currentUser={user}/>}

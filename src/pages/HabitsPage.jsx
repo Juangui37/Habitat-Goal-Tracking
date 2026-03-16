@@ -158,7 +158,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
         </div>
         <div style={{flex:1}}>
           <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>Today — {today}</div>
-          <div style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:4}}>
+          <div style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:4}}>
             {allDone ? "🎉 All done!" : `${doneCnt} of ${todayHabits.length} habits`}
           </div>
           <div style={{fontSize:12,color:T.muted}}>{allDone?"You crushed it today. Consistency is everything.":"Keep going — every check-off counts."}</div>
@@ -298,9 +298,9 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
       {showAddHabit && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}}>
           <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>
-            <h3 style={{fontSize:17,fontWeight:700,color:"#fff",marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Create Custom Habit</h3>
+            <h3 style={{fontSize:17,fontWeight:700,color:T.text,marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Create Custom Habit</h3>
             <input value={newHabit.label} onChange={e=>setNewHabit(n=>({...n,label:e.target.value}))} placeholder="Habit name..." autoFocus
-              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:"#fff",fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
+              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:T.muted,marginBottom:8,letterSpacing:1}}>CATEGORY</div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -332,9 +332,9 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
       {showEditModal && editingHabit && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}}>
           <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>
-            <h3 style={{fontSize:17,fontWeight:700,color:"#fff",marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Edit Habit</h3>
+            <h3 style={{fontSize:17,fontWeight:700,color:T.text,marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Edit Habit</h3>
             <input value={editingHabit.label} onChange={e=>setEditingHabit(h=>({...h,label:e.target.value}))}
-              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:"#fff",fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
+              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:T.muted,marginBottom:8,letterSpacing:1}}>CATEGORY</div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>

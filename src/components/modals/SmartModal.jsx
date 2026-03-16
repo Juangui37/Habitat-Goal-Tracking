@@ -25,13 +25,13 @@ function SmartModal({ onSave, onClose, editGoal }) {
   const canNext=()=>cur.key==="title"?form.title.trim().length>2:cur.key==="specific"?form.specific.trim().length>5:true;
   const addSub=()=>{if(!si.trim())return;upd("subtasks",[...form.subtasks,{id:Date.now().toString(),label:si.trim(),done:false}]);setSi("");};
   const save=()=>{onSave({...form,id:editGoal?.id||Date.now().toString(),journal:editGoal?.journal||[],createdAt:editGoal?.createdAt||todayStr()});onClose();};
-  const inp={background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"13px 15px",color:"#fff",fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
+  const inp={background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"13px 15px",color:T.text,fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}}>
       <div style={{background:"#13151E",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,width:"min(540px,95vw)",padding:"36px",position:"relative"}}>
         <div style={{display:"flex",gap:4,marginBottom:28}}>{steps.map((_,i)=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=step?cat.color:"rgba(255,255,255,0.1)",transition:"background 0.3s"}}/>)}</div>
         <div style={{fontSize:10,letterSpacing:3,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",marginBottom:6}}>Step {step+1} of {steps.length}</div>
-        <h2 style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:4,fontFamily:"Georgia,serif"}}>{cur.label}</h2>
+        <h2 style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:4,fontFamily:"Georgia,serif"}}>{cur.label}</h2>
         {cur.hint&&<p style={{fontSize:12,color:"rgba(255,255,255,0.38)",marginBottom:20,lineHeight:1.5}}>{cur.hint}</p>}
         {cur.type==="text"&&<input value={form[cur.key]} onChange={e=>upd(cur.key,e.target.value)} placeholder={cur.placeholder} autoFocus onKeyDown={e=>e.key==="Enter"&&canNext()&&setStep(s=>s+1)} style={inp}/>}
         {cur.type==="textarea"&&<textarea value={form[cur.key]} onChange={e=>upd(cur.key,e.target.value)} placeholder={cur.placeholder} rows={4} style={{...inp,resize:"vertical",lineHeight:1.6}}/>}

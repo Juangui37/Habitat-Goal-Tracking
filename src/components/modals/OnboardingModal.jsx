@@ -166,7 +166,7 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
               {["Set real goals. Build real habits. See real growth.","AI connects everything — your habits, your journal, your progress.","This is your life, organized."].map((line,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px",borderRadius:11,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",marginBottom:8,textAlign:"left"}}>
                   <span style={{fontSize:16}}>{"🎯📊✨"[i]}</span>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.75)"}}>{line}</span>
+                  <span style={{fontSize:13,color:T.muted}}>{line}</span>
                 </div>
               ))}
             </div>
@@ -175,12 +175,12 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
           {/* STEP 1 — TOUR */}
           {step===1&&(
             <div>
-              <h2 style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:6}}>What's inside Lumina</h2>
+              <h2 style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:6}}>What's inside Lumina</h2>
               <p style={{fontSize:13,color:T2.muted,marginBottom:20}}>Five pages. One connected system.</p>
               {[["🎯","Goals","Set AI-powered SMART goals across every area of your life"],["🔁","Habits","Build daily habits tied directly to your goals"],["📓","Journal","Write freely — AI reads the patterns so you don't have to"],["📊","Analytics","See your growth in numbers across any time range"],["🗺️","Mind Map","A living snapshot of every area of your life — powered by AI"]].map(([icon,name,desc])=>(
                 <div key={name} style={{display:"flex",gap:14,padding:"13px 16px",borderRadius:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",marginBottom:8}}>
                   <span style={{fontSize:22,flexShrink:0}}>{icon}</span>
-                  <div><div style={{fontSize:13,fontWeight:700,color:"#fff",marginBottom:2}}>{name}</div><div style={{fontSize:12,color:T2.muted,lineHeight:1.4}}>{desc}</div></div>
+                  <div><div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:2}}>{name}</div><div style={{fontSize:12,color:T2.muted,lineHeight:1.4}}>{desc}</div></div>
                 </div>
               ))}
             </div>
@@ -189,14 +189,14 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
           {/* STEP 2 — FIRST GOAL */}
           {step===2&&(
             <div>
-              <h2 style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:6}}>What do you want to achieve?</h2>
+              <h2 style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:6}}>What do you want to achieve?</h2>
               <p style={{fontSize:13,color:T2.muted,marginBottom:18,lineHeight:1.5}}>Paste a quick idea or a detailed brain dump — AI will extract your goals.</p>
               {!generatedGoal&&generatedGoals.length===0&&(
                 <>
                   <textarea value={goalInput} onChange={e=>setGoalInput(e.target.value)}
                     placeholder={'One goal: "I want to get stronger and gain muscle"\n\nOr paste anything: journal notes, a list of goals, a long description — AI reads it all and extracts every goal it finds.'}
                     rows={4}
-                    style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,padding:"13px 15px",color:"#fff",fontSize:13,outline:"none",resize:"vertical",fontFamily:"inherit",lineHeight:1.6,boxSizing:"border-box",marginBottom:12}}/>
+                    style={{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,padding:"13px 15px",color:T.text,fontSize:13,outline:"none",resize:"vertical",fontFamily:"inherit",lineHeight:1.6,boxSizing:"border-box",marginBottom:12}}/>
                   <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
                     {CHIPS.map(chip=>(
                       <button key={chip} onClick={()=>setGoalInput(chip)} style={{padding:"7px 14px",borderRadius:20,border:"1px solid rgba(155,143,232,0.4)",background:"rgba(155,143,232,0.08)",color:"#9B8FE8",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>{chip}</button>
@@ -237,7 +237,7 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
                             <div style={{display:"flex",gap:6,marginBottom:4}}>
                               <span style={{fontSize:9,background:`${c.color}20`,color:c.color,padding:"2px 7px",borderRadius:20,fontWeight:700}}>{c.icon} {c.label}</span>
                             </div>
-                            <div style={{fontSize:13,fontWeight:700,color:"#fff",marginBottom:3}}>{g.title}</div>
+                            <div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:3}}>{g.title}</div>
                             <div style={{fontSize:11,color:"rgba(255,255,255,0.45)",lineHeight:1.4}}>{g.specific?.slice(0,80)}{g.specific?.length>80?"...":""}</div>
                           </div>
                         </div>
@@ -252,7 +252,7 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
                     <span style={{fontSize:10,background:`${goalCat.color}22`,color:goalCat.color,padding:"3px 10px",borderRadius:20,fontWeight:700}}>{goalCat.icon} {goalCat.label}</span>
                     <span style={{fontSize:10,color:"rgba(255,255,255,0.35)"}}>Due {generatedGoal.timebound}</span>
                   </div>
-                  <div style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:8}}>{generatedGoal.title}</div>
+                  <div style={{fontSize:15,fontWeight:700,color:T.text,marginBottom:8}}>{generatedGoal.title}</div>
                   <div style={{fontSize:12,color:"rgba(255,255,255,0.55)",lineHeight:1.5,marginBottom:10}}>{generatedGoal.specific}</div>
                   {generatedGoal.subtasks.slice(0,3).map((s,i)=>(
                     <div key={i} style={{fontSize:11,color:"rgba(255,255,255,0.45)",marginBottom:3}}>→ {s.label||s}</div>
@@ -269,7 +269,7 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
           {/* STEP 3 — HABITS */}
           {step===3&&(
             <div>
-              <h2 style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:6}}>Now let's build habits that support that goal.</h2>
+              <h2 style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:6}}>Now let's build habits that support that goal.</h2>
               <p style={{fontSize:13,color:T2.muted,marginBottom:18,lineHeight:1.5}}>Small daily actions beat big sporadic efforts every time.</p>
               {habitsLoading?(
                 <div style={{textAlign:"center",padding:"30px 0"}}>
@@ -286,7 +286,7 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
                         {on&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
                       </div>
                       <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:600,color:"#fff",marginBottom:2}}>{h.icon} {h.label}</div>
+                        <div style={{fontSize:13,fontWeight:600,color:T.text,marginBottom:2}}>{h.icon} {h.label}</div>
                         <div style={{fontSize:11,color:T2.muted}}>{h.why}</div>
                       </div>
                     </div>
@@ -299,12 +299,12 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
           {/* STEP 4 — JOURNAL INTRO */}
           {step===4&&(
             <div>
-              <h2 style={{fontSize:20,fontWeight:700,color:"#fff",marginBottom:6}}>Your journal is smarter than you think.</h2>
+              <h2 style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:6}}>Your journal is smarter than you think.</h2>
               <p style={{fontSize:13,color:T2.muted,marginBottom:20,lineHeight:1.5}}>Write anything. AI does the pattern recognition.</p>
               {[["✍️","Write anything — AI figures out which goal it connects to"],["📅","Get a weekly Wrapped summary of your patterns and progress"],["💡","The more you write, the smarter your goal suggestions get"]].map(([icon,text])=>(
                 <div key={icon} style={{display:"flex",gap:14,padding:"13px 16px",borderRadius:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",marginBottom:8}}>
                   <span style={{fontSize:22,flexShrink:0}}>{icon}</span>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.75)",lineHeight:1.4}}>{text}</span>
+                  <span style={{fontSize:13,color:T.muted,lineHeight:1.4}}>{text}</span>
                 </div>
               ))}
               {/* Example entry */}
@@ -324,7 +324,7 @@ function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
           {step===5&&(
             <div style={{textAlign:"center",paddingTop:8}}>
               <div style={{fontSize:48,marginBottom:16}}>🎉</div>
-              <h2 style={{fontSize:22,fontWeight:700,color:"#fff",marginBottom:8}}>You're set up, {firstName}.</h2>
+              <h2 style={{fontSize:22,fontWeight:700,color:T.text,marginBottom:8}}>You're set up, {firstName}.</h2>
               <p style={{fontSize:13,color:T2.muted,marginBottom:24,lineHeight:1.6}}>Here's what's ready for you:</p>
               {[
                 ["✅",`1 SMART goal created${generatedGoal?` — "${generatedGoal.title}"`:""}`,"#4CAF82"],

@@ -78,7 +78,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
         <div>
-          <h2 style={{fontSize:20,fontWeight:700,color:"#fff",margin:0,marginBottom:4}}>🗺️ Complete Picture</h2>
+          <h2 style={{fontSize:20,fontWeight:700,color:T.text,margin:0,marginBottom:4}}>🗺️ Complete Picture</h2>
           <p style={{fontSize:13,color:"rgba(255,255,255,0.4)",margin:0}}>A living snapshot of every area of your life</p>
         </div>
         <button onClick={generate} disabled={loading}
@@ -99,7 +99,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders }) {
       {!mapData&&!loading&&(
         <div style={{textAlign:"center",padding:"60px 0"}}>
           <div style={{fontSize:48,marginBottom:16}}>🗺️</div>
-          <h3 style={{fontSize:17,fontWeight:600,color:"#fff",margin:"0 0 8px"}}>Generate your Complete Picture</h3>
+          <h3 style={{fontSize:17,fontWeight:600,color:T.text,margin:"0 0 8px"}}>Generate your Complete Picture</h3>
           <p style={{fontSize:13,color:"rgba(255,255,255,0.4)",maxWidth:340,margin:"0 auto 24px",lineHeight:1.6}}>AI will analyze your goals, habits, and journal entries to create a connected view of every life area.</p>
         </div>
       )}

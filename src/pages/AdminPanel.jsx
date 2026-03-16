@@ -41,7 +41,7 @@ function AdminPanel({ currentUser }) {
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-        <h2 style={{fontSize:18,fontWeight:700,color:"#fff",margin:0}}>⚙️ Admin Panel</h2>
+        <h2 style={{fontSize:18,fontWeight:700,color:T.text,margin:0}}>⚙️ Admin Panel</h2>
         <button onClick={load} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:9,padding:"8px 14px",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>↺ Refresh</button>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
