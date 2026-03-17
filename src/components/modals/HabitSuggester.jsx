@@ -58,7 +58,7 @@ Keep labels concise (under 40 chars).`;      
   const selectedCount = Object.values(selected).filter(Boolean).length;       
   return (        
     <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,backdropFilter:"blur(12px)" }}>       
-      <div style={{ background:"#13151E",border:`1px solid ${cat.color}44`,borderRadius:22,width:"min(500px,95vw)",padding:"32px",position:"relative" }}>       
+      <div style={{ background:T.card,border:`1px solid ${cat.color}44`,borderRadius:22,width:"min(500px,95vw)",padding:"32px",position:"relative" }}>        
         {/* Header */}        
         <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:6 }}>        
           <div style={{ width:38,height:38,borderRadius:11,background:`${cat.color}22`,border:`1px solid ${cat.color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18 }}>{cat.icon}</div>       

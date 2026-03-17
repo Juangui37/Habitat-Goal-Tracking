@@ -199,7 +199,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
                 <span style={{fontSize:13,fontWeight:700,color:T.text}}>{cat.label}</span>
                 <span style={{fontSize:10,color:cat.color,fontWeight:600}}>{catDone}/{catHabits.length}</span>
               </div>
-              <div style={{height:3,width:80,borderRadius:2,background:"rgba(255,255,255,0.07)"}}>
+              <div style={{height:3,width:80,borderRadius:2,background:T.inputBg}}>
                 <div style={{height:"100%",borderRadius:2,background:cat.color,width:`${catHabits.length>0?Math.round(catDone/catHabits.length*100):0}%`,transition:"width 0.5s"}}/>
               </div>
             </div>
@@ -244,7 +244,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
                 <div style={{fontWeight:700,color:T.text,fontSize:16}}>Habit Presets</div>
                 <div style={{fontSize:11,color:T.muted,marginTop:2}}>Pick a category and add ready-made habits</div>
               </div>
-              <button onClick={()=>{setShowPresets(false);setSelectedPresets({});}} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 14px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>
+              <button onClick={()=>{setShowPresets(false);setSelectedPresets({});}} style={{background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 14px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>
             </div>
             <div style={{display:"flex",gap:0,borderBottom:`1px solid ${T.border}`,overflowX:"auto"}}>
               {HAB_CATS.map(c => (
@@ -268,7 +268,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
                       cursor:alreadyAdded?"default":"pointer",transition:"all 0.15s"}}>
                     {/* Checkbox */}
                     <div style={{width:20,height:20,borderRadius:6,flexShrink:0,
-                      border:`2px solid ${alreadyAdded?"rgba(76,175,130,0.5)":isSelected?cat.color:"rgba(255,255,255,0.2)"}`,
+                      border:`2px solid ${alreadyAdded?"rgba(76,175,130,0.5)":isSelected?cat.color:T.muted}`,
                       background:alreadyAdded?"rgba(76,175,130,0.15)":isSelected?cat.color:"transparent",
                       display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.15s"}}>
                       {(alreadyAdded||isSelected)&&<span style={{color:"#fff",fontSize:10,fontWeight:800}}>✓</span>}
@@ -282,7 +282,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
             </div>
             {/* Floating Add button */}
             {Object.keys(selectedPresets).length > 0 && (
-              <div style={{padding:"14px 24px",borderTop:`1px solid ${T.border}`,background:"#13151E",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+              <div style={{padding:"14px 24px",borderTop:`1px solid ${T.border}`,background:T.card,display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
                 <span style={{fontSize:12,color:T.muted}}>{Object.keys(selectedPresets).length} habit{Object.keys(selectedPresets).length!==1?"s":""} selected</span>
                 <button onClick={addAllSelectedPresets}
                   style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:11,padding:"11px 24px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:13,fontFamily:"inherit",boxShadow:"0 4px 16px rgba(155,143,232,0.3)"}}>
@@ -300,7 +300,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
           <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>
             <h3 style={{fontSize:17,fontWeight:700,color:T.text,marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Create Custom Habit</h3>
             <input value={newHabit.label} onChange={e=>setNewHabit(n=>({...n,label:e.target.value}))} placeholder="Habit name..." autoFocus
-              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
+              style={{width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:T.muted,marginBottom:8,letterSpacing:1}}>CATEGORY</div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -334,7 +334,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
           <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:18,width:"min(480px,96vw)",padding:"28px",maxHeight:"90vh",overflowY:"auto"}}>
             <h3 style={{fontSize:17,fontWeight:700,color:T.text,marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Edit Habit</h3>
             <input value={editingHabit.label} onChange={e=>setEditingHabit(h=>({...h,label:e.target.value}))}
-              style={{width:"100%",background:"rgba(255,255,255,0.05)",border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
+              style={{width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:10,padding:"12px 15px",color:T.text,fontSize:14,outline:"none",marginBottom:14,boxSizing:"border-box",fontFamily:"inherit"}}/>
             <div style={{marginBottom:14}}>
               <div style={{fontSize:11,color:T.muted,marginBottom:8,letterSpacing:1}}>CATEGORY</div>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>

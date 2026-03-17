@@ -62,11 +62,11 @@ function GoalCard({ goal, onToggleSubtask, onDelete, onEdit, onAddNote }) {   �
           )}        
           <div style={{marginTop:13}}>        
             <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:T.muted,marginBottom:5}}><span>Progress</span><span>{pct}%</span></div>        
-            <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.07)"}}><div style={{height:"100%",borderRadius:2,background:cat.color,width:`${pct}%`,transition:"width 0.6s ease"}}/></div>        
+            <div style={{height:3,borderRadius:2,background:T.inputBg}}><div style={{height:"100%",borderRadius:2,background:cat.color,width:`${pct}%`,transition:"width 0.6s ease"}}/></div>       
           </div>        
           <div style={{display:"flex",gap:7,marginTop:13}}>       
-            <button onClick={()=>setShowJournal(j=>!j)} style={{flex:1,background:"rgba(255,255,255,0.04)",border:`1px solid ${T.border}`,borderRadius:8,padding:"9px",color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>{showJournal?"Hide Journal":"📓 Journal"}</button>        
-            <button onClick={()=>onEdit(goal)} style={{flex:1,background:"rgba(255,255,255,0.04)",border:`1px solid ${T.border}`,borderRadius:8,padding:"9px",color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>✏️ Edit</button>       
+            <button onClick={()=>setShowJournal(j=>!j)} style={{flex:1,background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:8,padding:"9px",color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>{showJournal?"Hide Journal":"📓 Journal"}</button>       
+            <button onClick={()=>onEdit(goal)} style={{flex:1,background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:8,padding:"9px",color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>✏️ Edit</button>        
             <button onClick={()=>onDelete(goal.id)} style={{background:"rgba(232,100,90,0.08)",border:"1px solid rgba(232,100,90,0.2)",borderRadius:8,padding:"9px 12px",color:"#E8645A",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>Delete</button>        
           </div>        
           {showJournal&&<JournalPanel goal={goal} onAddNote={onAddNote} onClose={()=>setShowJournal(false)} catColor={cat.color}/>}       
@@ -101,7 +101,7 @@ function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJo
           <div key={c.id} onClick={()=>setActiveCat(ac=>ac===c.id?"all":c.id)} style={{background:activeCat===c.id?`${c.color}12`:T.card,border:`1px solid ${activeCat===c.id?c.color+"55":T.border}`,borderRadius:11,padding:"12px 13px",cursor:"pointer",transition:"all 0.2s"}}>       
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:14}}>{c.icon}</span><span style={{fontSize:11,fontWeight:700,color:c.color}}>{avg}%</span></div>       
             <div style={{fontSize:11,fontWeight:600,color:T.text,marginBottom:5}}>{c.label}</div>       
-            <div style={{height:3,borderRadius:2,background:"rgba(255,255,255,0.06)"}}><div style={{height:"100%",borderRadius:2,background:c.color,width:`${avg}%`,transition:"width 0.6s"}}/></div>       
+            <div style={{height:3,borderRadius:2,background:T.inputBg}}><div style={{height:"100%",borderRadius:2,background:c.color,width:`${avg}%`,transition:"width 0.6s"}}/></div>        
             <div style={{fontSize:9,color:T.muted,marginTop:4}}>{cg.length} goal{cg.length>1?"s":""}</div>        
           </div>        
         );})}       

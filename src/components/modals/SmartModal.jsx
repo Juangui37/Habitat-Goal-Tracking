@@ -28,7 +28,7 @@ function SmartModal({ onSave, onClose, editGoal }) {
   const inp={background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:10,padding:"13px 15px",color:T.text,fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(8px)"}}>
-      <div style={{background:"#13151E",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,width:"min(540px,95vw)",padding:"36px",position:"relative"}}>
+      <div style={{background:T.card,border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,width:"min(540px,95vw)",padding:"36px",position:"relative"}}>
         <div style={{display:"flex",gap:4,marginBottom:28}}>{steps.map((_,i)=><div key={i} style={{flex:1,height:3,borderRadius:2,background:i<=step?cat.color:"rgba(255,255,255,0.1)",transition:"background 0.3s"}}/>)}</div>
         <div style={{fontSize:10,letterSpacing:3,color:"rgba(255,255,255,0.38)",textTransform:"uppercase",marginBottom:6}}>Step {step+1} of {steps.length}</div>
         <h2 style={{fontSize:20,fontWeight:700,color:T.text,marginBottom:4,fontFamily:"Georgia,serif"}}>{cur.label}</h2>

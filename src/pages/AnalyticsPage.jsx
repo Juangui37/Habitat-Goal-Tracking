@@ -370,13 +370,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             );
           })()}
 
-          {/* Show more habits button — moved outside the DOW chart */}
-          {filteredHabits.length > 5 && (
-            <button onClick={()=>setShowAllHabits(v=>!v)}
-              style={{width:"100%",background:"transparent",border:`1px solid ${T.border}`,borderRadius:9,padding:"8px",color:T.muted,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",marginBottom:18}}>
-              {showAllHabits ? `▲ Show less` : `▼ Show all ${filteredHabits.length} habits`}
-            </button>
-          )}
+
 
           {/* Category breakdown */}
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
@@ -384,10 +378,10 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             {catStats.map(c=>(
               <div key={c.id} style={{marginBottom:12}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                  <span style={{fontSize:13,color:T.muted,fontWeight:600}}>{c.icon} {c.label} <span style={{color:T.muted,fontWeight:400,fontSize:11}}>({c.count} habits)</span></span>
+                  <span style={{fontSize:13,color:T.text,fontWeight:600}}>{c.icon} {c.label} <span style={{color:T.muted,fontWeight:400,fontSize:11}}>({c.count} habits)</span></span>
                   <span style={{fontSize:12,fontWeight:700,color:c.color}}>{c.avg}%</span>
                 </div>
-                <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>
+                <div style={{height:6,borderRadius:3,background:T.faint}}>
                   <div style={{height:"100%",borderRadius:3,background:c.color,width:`${c.avg}%`,transition:"width 0.6s ease"}}/>
                 </div>
               </div>
@@ -453,13 +447,13 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               {getDates("month").map((d,i)=>{
                 const dd = dailyData.find(x=>x.date===d);
                 const pct = dd?.pct||0;
-                const bg = pct===100?"#4CAF82":pct>70?"#9B8FE8":pct>40?"#C8A96E":pct>0?"rgba(155,143,232,0.2)":"rgba(255,255,255,0.05)";
+                const bg = pct===100?"#4CAF82":pct>70?"#9B8FE8":pct>40?"#C8A96E":pct>0?"rgba(155,143,232,0.2)":T.inputBg;
                 return <div key={i} title={`${d}: ${pct}%`} style={{width:28,height:28,borderRadius:5,background:bg,cursor:"default"}}/>;
               })}
             </div>
             <div style={{display:"flex",gap:10,marginTop:10,alignItems:"center"}}>
               <span style={{fontSize:10,color:T.muted}}>Less</span>
-              {["rgba(255,255,255,0.05)","rgba(155,143,232,0.2)","#C8A96E","#9B8FE8","#4CAF82"].map((c,i)=>(
+              {[T.faint,"rgba(155,143,232,0.2)","#C8A96E","#9B8FE8","#4CAF82"].map((c,i)=>(
                 <div key={i} style={{width:14,height:14,borderRadius:3,background:c}}/>
               ))}
               <span style={{fontSize:10,color:T.muted}}>More</span>
@@ -485,7 +479,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Overall Goal Completion</div>
               <span style={{fontSize:14,fontWeight:700,color:"#9B8FE8"}}>{overallGoalPct}%</span>
             </div>
-            <div style={{height:12,borderRadius:6,background:"rgba(255,255,255,0.07)",overflow:"hidden"}}>
+            <div style={{height:12,borderRadius:6,background:T.faint,overflow:"hidden"}}>
               <div style={{height:"100%",borderRadius:6,background:"linear-gradient(90deg,#9B8FE8,#7EB8D4)",width:`${overallGoalPct}%`,transition:"width 0.8s ease"}}/>
             </div>
           </div>
@@ -573,10 +567,10 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             {byCategory.map(c => (
               <div key={c.id} style={{marginBottom:14}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.8)",fontWeight:600}}>{c.icon} {c.label} <span style={{color:T.muted,fontWeight:400,fontSize:11}}>({c.count} goal{c.count>1?"s":""})</span></span>
+                  <span style={{fontSize:13,color:T.text,fontWeight:600}}>{c.icon} {c.label} <span style={{color:T.muted,fontWeight:400,fontSize:11}}>({c.count} goal{c.count>1?"s":""})</span></span>
                   <span style={{fontSize:12,fontWeight:700,color:c.color}}>{c.avg}%</span>
                 </div>
-                <div style={{height:8,borderRadius:4,background:"rgba(255,255,255,0.07)"}}>
+                <div style={{height:8,borderRadius:4,background:T.faint}}>
                   <div style={{height:"100%",borderRadius:4,background:c.color,width:`${c.avg}%`,transition:"width 0.7s ease"}}/>
                 </div>
               </div>
@@ -596,7 +590,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
                   <div key={g.id} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",borderBottom:`1px solid ${i<Math.min(daysLeftData.length-1,5)?T.border:"transparent"}`}}>
                     <span style={{fontSize:15}}>{cat.icon}</span>
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:12,color:"#fff",fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.title}</div>
+                      <div style={{fontSize:12,color:T.text,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.title}</div>
                       <div style={{fontSize:10,color:T.muted,marginTop:1}}>{g.timebound} · {g.pct}% done</div>
                     </div>
                     <span style={{fontSize:11,fontWeight:700,color:urgColor,whiteSpace:"nowrap"}}>
@@ -620,13 +614,13 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               {l:"Avg Mood", v:diary.length>0?(["😔","😐","🙂","😊","🤩"][Math.min(4,Math.round(diary.reduce((a,e)=>a+(["low","neutral","good","great"].indexOf(e.mood||"good")+1),0)/Math.max(diary.length,1))-1)]||"🙂"):"—", c:"#C8A96E"},
             ].map(x=>(
               <div key={x.l} style={{background:T.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T.border}`}}>
-                <div style={{fontSize:9,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>
+                <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>
                 <div style={{fontSize:26,fontWeight:700,color:x.c,letterSpacing:-1}}>{x.v}</div>
               </div>
             ))}
           </div>
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Topics Written About</div>
+            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Topics Written About</div>
             {(()=>{
               const catCounts = diary.flatMap(e=>e.categories||["uncategorized"]).reduce((acc,c)=>{acc[c]=(acc[c]||0)+1;return acc;},{});
               const total = Object.values(catCounts).reduce((a,b)=>a+b,0)||1;
@@ -637,7 +631,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
                     <span style={{fontSize:13,color:T.muted,fontWeight:600,textTransform:"capitalize"}}>{cat}</span>
                     <span style={{fontSize:12,fontWeight:700,color:colors[cat]||"#9B8FE8"}}>{count} {count===1?"entry":"entries"}</span>
                   </div>
-                  <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>
+                  <div style={{height:6,borderRadius:3,background:T.faint}}>
                     <div style={{height:"100%",borderRadius:3,background:colors[cat]||"#9B8FE8",width:`${Math.round(count/total*100)}%`,transition:"width 0.6s ease"}}/>
                   </div>
                 </div>
@@ -645,17 +639,17 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             })()}
           </div>
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Mood Distribution</div>
+            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Mood Distribution</div>
             <div style={{display:"flex",gap:10}}>
               {[["great","😊","#4CAF82"],["good","🙂","#C8A96E"],["neutral","😐","#7EB8D4"],["low","😔","#E8645A"]].map(([mood,emoji,color])=>{
                 const cnt = diary.filter(e=>e.mood===mood).length;
                 const pct = diary.length > 0 ? Math.round(cnt/diary.length*100) : 0;
                 return (
-                  <div key={mood} style={{flex:1,background:"rgba(255,255,255,0.03)",borderRadius:11,padding:"14px 10px",textAlign:"center",border:`1px solid ${pct>0?color+"33":"rgba(255,255,255,0.06)"}`}}>
+                  <div key={mood} style={{flex:1,background:T.inputBg,borderRadius:11,padding:"14px 10px",textAlign:"center",border:`1px solid ${pct>0?color+"33":T.faint}`}}>
                     <div style={{fontSize:22,marginBottom:6}}>{emoji}</div>
                     <div style={{fontSize:18,fontWeight:700,color,marginBottom:2}}>{pct}%</div>
-                    <div style={{fontSize:10,color:"rgba(255,255,255,0.38)",textTransform:"capitalize"}}>{mood}</div>
-                    <div style={{fontSize:10,color:"rgba(255,255,255,0.25)",marginTop:2}}>{cnt} entries</div>
+                    <div style={{fontSize:10,color:T.muted,textTransform:"capitalize"}}>{mood}</div>
+                    <div style={{fontSize:10,color:T.muted,marginTop:2}}>{cnt} entries</div>
                   </div>
                 );
               })}
@@ -719,18 +713,18 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               {l:"Completion %", v:reminders.length>0?Math.round(reminders.filter(r=>r.done).length/reminders.length*100)+"%":"—", c:"#7EB8D4"},
             ].map(x=>(
               <div key={x.l} style={{background:T.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T.border}`}}>
-                <div style={{fontSize:9,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>
+                <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>
                 <div style={{fontSize:26,fontWeight:700,color:x.c,letterSpacing:-1}}>{x.v}</div>
               </div>
             ))}
           </div>
           <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>By Life Category</div>
+            <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>By Life Category</div>
             {(()=>{
               const catCounts = reminders.reduce((acc,r)=>{const c=r.category||"general";acc[c]=(acc[c]||0)+1;return acc;},{});
               const catDone = reminders.reduce((acc,r)=>{if(r.done){const c=r.category||"general";acc[c]=(acc[c]||0)+1;}return acc;},{});
               const colors={physical:"#E8645A",financial:"#4CAF82",career:"#9B8FE8",emotional:"#E87AAF",parenting:"#7EB8D4",lifestyle:"#E8A45A",travel:"#5AC8C8",religious:"#C8A96E",general:"#6B7280"};
-              if(Object.keys(catCounts).length===0) return <p style={{color:"rgba(255,255,255,0.25)",fontSize:13,textAlign:"center",padding:"20px 0"}}>No reminders yet</p>;
+              if(Object.keys(catCounts).length===0) return <p style={{color:T.muted,fontSize:13,textAlign:"center",padding:"20px 0"}}>No reminders yet</p>;
               return Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([cat,total])=>{
                 const done=catDone[cat]||0;
                 const pct=total>0?Math.round(done/total*100):0;
@@ -740,7 +734,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
                       <span style={{fontSize:13,color:T.muted,fontWeight:600,textTransform:"capitalize"}}>{cat}</span>
                       <span style={{fontSize:12,fontWeight:700,color:colors[cat]||"#9B8FE8"}}>{done}/{total} done</span>
                     </div>
-                    <div style={{height:6,borderRadius:3,background:"rgba(255,255,255,0.07)"}}>
+                    <div style={{height:6,borderRadius:3,background:T.faint}}>
                       <div style={{height:"100%",borderRadius:3,background:colors[cat]||"#9B8FE8",width:`${pct}%`,transition:"width 0.6s ease"}}/>
                     </div>
                   </div>

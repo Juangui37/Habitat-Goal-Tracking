@@ -79,7 +79,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20,flexWrap:"wrap",gap:12}}>
         <div>
           <h2 style={{fontSize:20,fontWeight:700,color:T.text,margin:0,marginBottom:4}}>🗺️ Complete Picture</h2>
-          <p style={{fontSize:13,color:"rgba(255,255,255,0.4)",margin:0}}>A living snapshot of every area of your life</p>
+          <p style={{fontSize:13,color:T.muted,margin:0}}>A living snapshot of every area of your life</p>
         </div>
         <button onClick={generate} disabled={loading}
           style={{background:"linear-gradient(135deg,#9B8FE8,#E87AAF)",border:"none",borderRadius:11,padding:"10px 18px",color:"#fff",cursor:loading?"not-allowed":"pointer",fontWeight:700,fontSize:12,fontFamily:"inherit",opacity:loading?0.7:1}}>
@@ -92,7 +92,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
       {loading&&(
         <div style={{textAlign:"center",padding:"60px 0"}}>
           <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:16}}>{[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#9B8FE8",animation:"blink 1.2s ease-in-out infinite",animationDelay:`${i*0.2}s`}}/>)}</div>
-          <p style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>{loadMsg}</p>
+          <p style={{fontSize:14,color:T.muted}}>{loadMsg}</p>
         </div>
       )}
 
@@ -100,7 +100,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
         <div style={{textAlign:"center",padding:"60px 0"}}>
           <div style={{fontSize:48,marginBottom:16}}>🗺️</div>
           <h3 style={{fontSize:17,fontWeight:600,color:T.text,margin:"0 0 8px"}}>Generate your Complete Picture</h3>
-          <p style={{fontSize:13,color:"rgba(255,255,255,0.4)",maxWidth:340,margin:"0 auto 24px",lineHeight:1.6}}>AI will analyze your goals, habits, and journal entries to create a connected view of every life area.</p>
+          <p style={{fontSize:13,color:T.muted,maxWidth:340,margin:"0 auto 24px",lineHeight:1.6}}>AI will analyze your goals, habits, and journal entries to create a connected view of every life area.</p>
         </div>
       )}
 
@@ -167,7 +167,7 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
                 )}
                 {/* Name label below circle */}
                 <text x={CX} y={CY+62} textAnchor="middle" fontSize="11" fontWeight="700"
-                  fill={T.text} fontFamily="DM Sans, system-ui">{firstName}</text>
+                  fill={T.isDark ? "white" : "#0E1018"} fontFamily="DM Sans, system-ui">{firstName}</text>
 
                 {/* Category nodes */}
                 {mapData.map((n, i) => {
@@ -191,9 +191,9 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
                         fill={cat.color} fontFamily="DM Sans, system-ui">{cat.label}</text>
                       {/* Progress % */}
                       <text x={pos.x} y={ny+56} textAnchor="middle" fontSize="15" fontWeight="800"
-                        fill="white" fontFamily="DM Sans, system-ui">{n.progressPercent}%</text>
+                        fill={T.isDark ? "white" : "#0E1018"} fontFamily="DM Sans, system-ui">{n.progressPercent}%</text>
                       {/* Progress bar track */}
-                      <rect x={nx+10} y={ny+63} width={NW-20} height={4} rx="2" fill="rgba(255,255,255,0.1)"/>
+                      <rect x={nx+10} y={ny+63} width={NW-20} height={4} rx="2" fill={T.isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}/>
                       {/* Progress bar fill */}
                       <rect x={nx+10} y={ny+63} width={Math.max(2,(NW-20)*n.progressPercent/100)} height={4} rx="2" fill={cat.color}/>
                     </g>
@@ -210,14 +210,14 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
                 <span style={{fontSize:22}}>{activeCat.icon}</span>
                 <div>
                   <div style={{fontWeight:700,color:activeCat.color,fontSize:15}}>{activeCat.label}</div>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Click a node to see its details</div>
+                  <div style={{fontSize:11,color:T.muted}}>Click a node to see its details</div>
                 </div>
                 <div style={{marginLeft:"auto",fontSize:24,fontWeight:800,color:activeCat.color}}>{activeNodeData.progressPercent}%</div>
               </div>
               {activeNodeData.insights?.map((ins,i)=>(
-                <div key={i} style={{display:"flex",gap:10,padding:"9px 12px",borderRadius:9,background:"rgba(255,255,255,0.04)",marginBottom:7}}>
+                <div key={i} style={{display:"flex",gap:10,padding:"9px 12px",borderRadius:9,background:T.inputBg,marginBottom:7}}>
                   <span style={{color:activeCat.color,fontWeight:700,flexShrink:0}}>→</span>
-                  <span style={{fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.4}}>{ins}</span>
+                  <span style={{fontSize:13,color:T.text,lineHeight:1.4}}>{ins}</span>
                 </div>
               ))}
               {activeNodeData.highlight&&(
@@ -244,12 +244,12 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
                   style={{background:T.card,border:`1px solid ${activeNode===n.category?cat.color+"55":T.border}`,borderRadius:12,padding:"13px 15px",cursor:"pointer",transition:"border-color 0.2s"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                     <span style={{fontSize:13,color:cat.color,fontWeight:700}}>{cat.icon} {cat.label}</span>
-                    <span style={{fontSize:13,fontWeight:700,color:"#fff"}}>{n.progressPercent}%</span>
+                    <span style={{fontSize:13,fontWeight:700,color:T.text}}>{n.progressPercent}%</span>
                   </div>
-                  <div style={{height:4,borderRadius:2,background:"rgba(255,255,255,0.07)"}}>
+                  <div style={{height:4,borderRadius:2,background:T.inputBg}}>
                     <div style={{height:"100%",borderRadius:2,background:cat.color,width:`${n.progressPercent}%`,transition:"width 0.6s"}}/>
                   </div>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:6,lineHeight:1.4}}>{n.insights?.[0]}</div>
+                  <div style={{fontSize:11,color:T.muted,marginTop:6,lineHeight:1.4}}>{n.insights?.[0]}</div>
                 </div>
               );
             })}

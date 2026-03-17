@@ -226,7 +226,7 @@ Respond ONLY with JSON: {"indices": [0, 3, 5], "explanation": "Found X entries a
                 <div style={{fontWeight:700,color:T.text,fontSize:16}}>New Journal Entry</div>
                 <div style={{fontSize:11,color:T.muted,marginTop:2}}>AI will categorize it automatically</div>
               </div>
-              <button onClick={()=>setShowWrite(false)} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 14px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>
+              <button onClick={()=>setShowWrite(false)} style={{background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:8,padding:"7px 14px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✕</button>
             </div>
             <div style={{flex:1,overflowY:"auto",padding:"20px 24px"}}>
               <textarea value={entryText} onChange={e=>setEntryText(e.target.value)} placeholder="What's on your mind today? Write freely — goals, reflections, wins, struggles, anything." rows={10} autoFocus

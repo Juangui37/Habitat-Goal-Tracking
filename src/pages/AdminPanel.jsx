@@ -42,29 +42,29 @@ function AdminPanel({ currentUser }) {
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
         <h2 style={{fontSize:18,fontWeight:700,color:T.text,margin:0}}>⚙️ Admin Panel</h2>
-        <button onClick={load} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T2.border}`,borderRadius:9,padding:"8px 14px",color:"rgba(255,255,255,0.5)",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>↺ Refresh</button>
+        <button onClick={load} style={{background:T.inputBg,border:`1px solid ${T2.border}`,borderRadius:9,padding:"8px 14px",color:T.text,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>↺ Refresh</button>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:20}}>
         {[{l:"Total Users",v:stats.length,c:"#9B8FE8"},{l:"AI Calls This Month",v:totalCalls,c:"#C8A96E"},{l:"Est. Monthly Cost",v:`$${estCost}`,c:"#E8645A"}].map(x=>(
           <div key={x.l} style={{background:T2.card,borderRadius:12,padding:"14px 16px",border:`1px solid ${T2.border}`}}>
-            <div style={{fontSize:9,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>
+            <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>
             <div style={{fontSize:24,fontWeight:700,color:x.c}}>{x.v}</div>
           </div>
         ))}
       </div>
-      {loading?<p style={{color:"rgba(255,255,255,0.4)",fontSize:13}}>Loading user stats...</p>:(
+      {loading?<p style={{color:T.muted,fontSize:13}}>Loading user stats...</p>:(
         <div style={{background:T2.card,borderRadius:14,border:`1px solid ${T2.border}`,overflow:"hidden"}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr auto auto",gap:16,padding:"10px 16px",borderBottom:`1px solid ${T2.border}`,fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:2,textTransform:"uppercase"}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr auto auto",gap:16,padding:"10px 16px",borderBottom:`1px solid ${T2.border}`,fontSize:10,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>
             <span>User ID</span><span>AI Calls</span><span>Joined</span>
           </div>
           {stats.map((s,i)=>(
             <div key={i} style={{display:"grid",gridTemplateColumns:"1fr auto auto",gap:16,padding:"11px 16px",borderBottom:i<stats.length-1?`1px solid ${T2.border}`:"none",fontSize:13}}>
-              <span style={{color:"rgba(255,255,255,0.6)",fontFamily:"monospace"}}>{s.uid}</span>
+              <span style={{color:T.text,fontFamily:"monospace"}}>{s.uid}</span>
               <span style={{color:s.calls>40?"#E8645A":s.calls>20?"#C8A96E":"#4CAF82",fontWeight:700}}>{s.calls}</span>
-              <span style={{color:"rgba(255,255,255,0.35)"}}>{s.joinDate}</span>
+              <span style={{color:T.muted}}>{s.joinDate}</span>
             </div>
           ))}
-          {stats.length===0&&<p style={{color:"rgba(255,255,255,0.3)",fontSize:13,padding:"20px 16px",margin:0}}>No usage data yet</p>}
+          {stats.length===0&&<p style={{color:T.muted,fontSize:13,padding:"20px 16px",margin:0}}>No usage data yet</p>}
         </div>
       )}
     </div>

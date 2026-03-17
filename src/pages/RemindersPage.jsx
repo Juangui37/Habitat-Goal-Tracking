@@ -149,7 +149,7 @@ Respond ONLY with JSON: {"category": "...", "note": "..."}`,
                     </div>
                   )}
                 </div>
-                <button onClick={()=>deleteReminder(r.id)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.15)",cursor:"pointer",fontSize:14,padding:"2px 4px",flexShrink:0}}>✕</button>
+                <button onClick={()=>deleteReminder(r.id)} style={{background:"none",border:"none",color:T.muted,cursor:"pointer",fontSize:14,padding:"2px 4px",flexShrink:0}}>✕</button>
               </div>
             </div>
           );
