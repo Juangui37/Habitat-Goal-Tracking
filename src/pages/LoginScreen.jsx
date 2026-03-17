@@ -4,7 +4,7 @@ import { sendPasswordResetEmail } from "firebase/auth";
 import { T } from "../constants/theme.js";
 import { APP_NAME, APP_TAGLINE } from "../constants/index.js";
 
-function LoginScreen({ onGoogleLogin, onEmailLogin, onEmailSignup, loading, onDemo }) {
+function LoginScreen({ onGoogleLogin, onEmailLogin, onEmailSignup, loading, onDemo, darkMode, setDarkMode }) {
   const [authMode, setAuthMode] = useState("options"); // options | email-login | email-signup
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,7 +39,14 @@ function LoginScreen({ onGoogleLogin, onEmailLogin, onEmailSignup, loading, onDe
   const inp = {width:"100%",background:T.inputBg,border:`1px solid ${T.faint}`,borderRadius:11,padding:"13px 16px",color:T.text,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"inherit",marginBottom:10};
 
   return (
-    <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',system-ui,sans-serif"}}>
+    <div style={{minHeight:"100vh",background:T.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',system-ui,sans-serif",position:"relative"}}>
+      {/* Theme toggle — top right */}
+      {setDarkMode && (
+        <button onClick={()=>setDarkMode(d=>!d)}
+          style={{position:"absolute",top:16,right:16,background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:10,padding:"8px 14px",color:T.muted,cursor:"pointer",fontSize:13,fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}>
+          {darkMode ? "☀️ Light" : "🌙 Dark"}
+        </button>
+      )}
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet"/>
       <div style={{textAlign:"center",padding:"0 24px",maxWidth:420,width:"100%"}}>
         {/* Logo */}

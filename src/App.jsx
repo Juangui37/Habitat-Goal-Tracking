@@ -190,7 +190,8 @@ export default function App() {
 
   if (!user && !demoMode) return (
     <LoginScreen onGoogleLogin={handleGoogleLogin} onEmailLogin={handleEmailLogin}
-      onEmailSignup={handleEmailSignup} loading={loginLoading} onDemo={handleDemo}/>
+      onEmailSignup={handleEmailSignup} loading={loginLoading} onDemo={handleDemo}
+      darkMode={darkMode} setDarkMode={setDarkMode}/>
   );
 
   return (
@@ -213,7 +214,7 @@ export default function App() {
           <button onClick={()=>setShowAI(true)} style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.28)",borderRadius:10,padding:"8px 13px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>✦ AI Coach</button>
           {tab==="goals"&&<button onClick={()=>{setEditGoal(null);setShowModal(true);}} style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"8px 16px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit",boxShadow:"0 4px 16px rgba(155,143,232,0.25)"}}>+ Goal</button>}
           {demoMode
-            ? <button onClick={()=>{setDemoMode(false);setGoals([]);setHabits([]);setHabitLogs({});}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"8px 12px",color:"rgba(255,255,255,0.6)",cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>Sign in →</button>
+            ? <button onClick={()=>{setDemoMode(false);setGoals([]);setHabits([]);setHabitLogs({});}} style={{background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:10,padding:"8px 12px",color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>Sign in →</button>
             : <div style={{display:"flex",gap:7,alignItems:"center"}}>
                 {user?.photoURL && <img src={user.photoURL} alt="" style={{width:28,height:28,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.15)",flexShrink:0}}/>}
                 <button onClick={()=>setTab("settings")} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:9,padding:"7px 11px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙</button>

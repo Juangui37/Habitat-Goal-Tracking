@@ -25,10 +25,21 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
     { id:"travel",    label:"Travel",    icon:"⊕",  color:"#5AC8C8" },
   ];
 
-  // Load from Firestore cache or generate
+  // Load cached mind map — localStorage for demo, Firestore for real users
   useEffect(() => {
-    if (!user) return;
     const loadCache = async () => {
+      if (!user) {
+        // Demo mode: use localStorage so it persists across tab switches
+        try {
+          const cached = JSON.parse(localStorage.getItem("lumina_demo_mindmap") || "null");
+          if (cached?.nodes && cached?.generatedAt) {
+            const age = Date.now() - new Date(cached.generatedAt).getTime();
+            if (age < 7 * 24 * 60 * 60 * 1000) { setMapData(cached.nodes); return; }
+          }
+        } catch(e) {}
+        return;
+      }
+      // Real user: Firestore cache
       try {
         const { getDoc } = await import("firebase/firestore");
         const snap = await getDoc(doc(db, "users", user.uid, "meta", "mindMap"));
@@ -61,8 +72,12 @@ function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profile
       const clean = text.replace(/```json|```/g,"").trim();
       const nodes = JSON.parse(clean);
       setMapData(nodes);
+      const ts = new Date().toISOString();
       if (user) {
-        await setDoc(doc(db,"users",user.uid,"meta","mindMap"), { nodes, generatedAt: new Date().toISOString() });
+        await setDoc(doc(db,"users",user.uid,"meta","mindMap"), { nodes, generatedAt: ts });
+      } else {
+        // Demo mode — persist to localStorage
+        try { localStorage.setItem("lumina_demo_mindmap", JSON.stringify({ nodes, generatedAt: ts })); } catch(e) {}
       }
     } catch(e) { setError(`Could not generate Mind Map: ${e.message}`); }
     setLoading(false);

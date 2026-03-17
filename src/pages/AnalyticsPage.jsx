@@ -229,7 +229,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
       <div style={{display:"flex",gap:7,marginBottom:18,flexWrap:"wrap",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
           {[["week","7D"],["month","30D"],["quarter","90D"],["halfyear","6M"],["year","1Y"]].map(([k,l])=>(
-            <button key={k} onClick={()=>setPeriod(k)} style={{padding:"7px 13px",borderRadius:9,border:`1px solid ${period===k?"rgba(255,255,255,0.35)":T.border}`,background:period===k?"rgba(255,255,255,0.1)":"transparent",color:period===k?"#fff":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>{l}</button>
+            <button key={k} onClick={()=>setPeriod(k)} style={{padding:"7px 13px",borderRadius:9,border:`1px solid ${period===k?"#9B8FE8":T.border}`,background:period===k?"rgba(155,143,232,0.15)":"transparent",color:period===k?"#9B8FE8":T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>{l}</button>
           ))}
         </div>
         <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
