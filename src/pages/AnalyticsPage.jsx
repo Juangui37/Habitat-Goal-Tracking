@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "../firebase.js";
 import { doc, setDoc, deleteDoc, collection, getDoc } from "firebase/firestore";
 import { T } from "../constants/theme.js";
+import { useIsMobile } from "../utils/mobile.js";
 import { CATS, HAB_CATS, PRESET_HABITS, DAY_SCHEDULES, DAY_LABELS, todayStr, calcProgress, daysLeft, ADMIN_UID } from "../constants/index.js";
 import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
 import { JournalPanel } from "../components/JournalPanel.jsx";
 
 function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], user = null }) {
+  const isMobile = useIsMobile();
   const [analyticsTab, setAnalyticsTab] = useState("goals");
   // Reset visible count when tab changes
   const switchTab = (tab) => {
@@ -254,7 +256,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
       {analyticsTab === "habits" && (
         <div>
           {/* Summary stats */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:11,marginBottom:18}}>
             <StatCard label="Avg Daily" value={`${Math.round(dailyData.reduce((a,d)=>a+d.pct,0)/Math.max(dailyData.length,1))}%`} sub={`over ${dates.length} days`} color="#9B8FE8"/>
             <StatCard label="Best Day" value={`${Math.max(...dailyData.map(d=>d.pct),0)}%`} sub="single day high" color="#4CAF82"/>
             <StatCard label="Perfect Days" value={dailyData.filter(d=>d.pct===100).length} sub="100% completion" color="#C8A96E"/>
@@ -285,7 +287,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               ["#00E676", "100% 🎯"],
             ];
             return (
-              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+              <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
                 <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Daily Completion Rate</div>
                 <div style={{display:"flex",alignItems:"flex-end",gap:period==="year"?1:period==="halfyear"?2:period==="quarter"?2:3,height:100,overflow:"hidden"}}>
                   {dailyData.map((d,i)=>(
@@ -333,7 +335,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             };
             const bestDow = dayOfWeekData.reduce((best,d) => d.avg > best.avg ? d : best, dayOfWeekData[0]);
             return (
-              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+              <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
                   <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Best Days of the Week</div>
                   {bestDow && bestDow.avg > 0 && (
@@ -373,7 +375,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
 
 
           {/* Category breakdown */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
             <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Completion by Category</div>
             {catStats.map(c=>(
               <div key={c.id} style={{marginBottom:12}}>
@@ -394,7 +396,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             const catFiltered = habitCatFilter==="all" ? filteredHabits : filteredHabits.filter(h=>h.category===habitCatFilter);
             const visible = catFiltered.slice(0, visibleHabits);
             return (
-              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+              <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
                 <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>Habit Leaderboard</div>
                 <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
                   <button onClick={()=>setHabitCatFilter("all")} style={{padding:"4px 10px",borderRadius:20,border:`1px solid ${habitCatFilter==="all"?"#9B8FE8":T.border}`,background:habitCatFilter==="all"?"rgba(155,143,232,0.15)":"transparent",color:habitCatFilter==="all"?"#9B8FE8":T.muted,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}}>All</button>
@@ -441,7 +443,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
           })()}
 
           {/* Consistency heatmap-style last 4 weeks */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",border:`1px solid ${T.border}`}}>
             <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Last 28 Days — Heatmap</div>
             <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
               {getDates("month").map((d,i)=>{
@@ -466,7 +468,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
       {analyticsTab === "goals" && (
         <div>
           {/* Summary stats */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:11,marginBottom:18}}>
             <StatCard label="Overall Progress" value={`${overallGoalPct}%`} sub="across all goals" color="#9B8FE8"/>
             <StatCard label="On Track" value={onTrack} sub="≥50% complete" color="#4CAF82"/>
             <StatCard label="Needs Attention" value={needsWork} sub="<25% complete" color="#E8645A"/>
@@ -485,9 +487,9 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
           </div>
 
           {/* Goals by Priority — moved to top */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
             <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Goals by Priority</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:11}}>
+            <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(3,1fr)",gap:11}}>
               {["High","Medium","Low"].map(pri => {
                 const pg = goals.filter(g=>g.priority===pri);
                 const avg = pg.length>0?Math.round(pg.reduce((a,g)=>a+calcProgress(g),0)/pg.length):0;
@@ -512,7 +514,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
             const filtered = goalCatFilter==="all" ? goalStats : goalStats.filter(g=>g.category===goalCatFilter);
             const visible = filtered.slice(0, visibleGoals);
             return (
-              <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+              <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
                   <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Goal Progress Breakdown</div>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -562,7 +564,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
           })()}
 
           {/* By category breakdown */}
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
             <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Progress by Life Area</div>
             {byCategory.map(c => (
               <div key={c.id} style={{marginBottom:14}}>
@@ -580,7 +582,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
 
           {/* Upcoming deadlines */}
           {daysLeftData.length > 0 && (
-            <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>
+            <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",border:`1px solid ${T.border}`}}>
               <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Upcoming Deadlines</div>
               {daysLeftData.slice(0,6).map((g,i) => {
                 const cat = CATS.find(c=>c.id===g.category)||CATS[0];
@@ -606,7 +608,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
 
       {analyticsTab === "journal" && (
         <div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:11,marginBottom:18}}>
             {[
               {l:"Total Entries", v:diary.length, c:"#9B8FE8"},
               {l:"This Month", v:diary.filter(e=>new Date(e.createdAt)>new Date(Date.now()-30*86400000)).length, c:"#7EB8D4"},
@@ -619,7 +621,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               </div>
             ))}
           </div>
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
             <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Topics Written About</div>
             {(()=>{
               const catCounts = diary.flatMap(e=>e.categories||["uncategorized"]).reduce((acc,c)=>{acc[c]=(acc[c]||0)+1;return acc;},{});
@@ -638,7 +640,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               ));
             })()}
           </div>
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
             <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>Mood Distribution</div>
             <div style={{display:"flex",gap:10}}>
               {[["great","😊","#4CAF82"],["good","🙂","#C8A96E"],["neutral","😐","#7EB8D4"],["low","😔","#E8645A"]].map(([mood,emoji,color])=>{
@@ -655,7 +657,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               })}
             </div>
           </div>
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",border:`1px solid ${T.border}`}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Recent Journal Entries</div>
             </div>
@@ -705,7 +707,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
 
       {analyticsTab === "reminders" && (
         <div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>
+          <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:11,marginBottom:18}}>
             {[
               {l:"Total", v:reminders.length, c:"#9B8FE8"},
               {l:"Completed", v:reminders.filter(r=>r.done).length, c:"#4CAF82"},
@@ -718,7 +720,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               </div>
             ))}
           </div>
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:18,border:`1px solid ${T.border}`}}>
             <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:14}}>By Life Category</div>
             {(()=>{
               const catCounts = reminders.reduce((acc,r)=>{const c=r.category||"general";acc[c]=(acc[c]||0)+1;return acc;},{});
@@ -742,7 +744,7 @@ function AnalyticsPage({ habits, habitLogs, goals, reminders = [], diary = [], u
               });
             })()}
           </div>
-          <div style={{background:T.card,borderRadius:14,padding:"18px 20px",border:`1px solid ${T.border}`}}>
+          <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",border:`1px solid ${T.border}`}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
               <div style={{fontSize:11,color:T.muted,letterSpacing:2,textTransform:"uppercase"}}>Reminders List</div>
             </div>

@@ -12,6 +12,9 @@ import { APP_NAME, APP_TAGLINE, ADMIN_UID, DISPOSABLE_DOMAINS,
 import { SEED_GOALS, SEED_HABITS, SEED_REMINDERS, SEED_DIARY,
          generateDemoLogs } from "./constants/seed.js";
 
+// ── Utilities ─────────────────────────────────────────────────────────────────
+import { useIsMobile } from "./utils/mobile.js";
+
 // ── Components ─────────────────────────────────────────────────────────────────
 import { Nav }                    from "./components/Nav.jsx";
 import { Ring }                   from "./components/Ring.jsx";
@@ -35,6 +38,7 @@ import { AdminPanel }    from "./pages/AdminPanel.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
+  const isMobile = useIsMobile();
   const [darkMode, setDarkMode] = useState(true);
   Object.assign(T, darkMode ? DARK_THEME : LIGHT_THEME); // live theme mutation
 
@@ -199,32 +203,62 @@ export default function App() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet"/>
 
       {/* ── Header ── */}
-      <div style={{borderBottom:`1px solid ${T.border}`,padding:"12px 24px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,background:darkMode?"rgba(7,8,12,0.97)":"rgba(244,245,248,0.97)",backdropFilter:"blur(20px)",zIndex:10,gap:12,flexWrap:"wrap"}}>
-        <div style={{flexShrink:0}}>
-          <div style={{fontSize:9,color:T.muted,letterSpacing:3,textTransform:"uppercase",marginBottom:1}}>{greet()}, {demoMode?"Demo":user?.displayName?.split(" ")[0]||"You"}</div>
+      <div style={{
+        borderBottom:`1px solid ${T.border}`,
+        padding: isMobile ? "10px 14px" : "12px 24px",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        position:"sticky", top:0,
+        background: darkMode ? "rgba(7,8,12,0.97)" : "rgba(244,245,248,0.97)",
+        backdropFilter:"blur(20px)", zIndex:10, gap: isMobile ? 8 : 12,
+      }}>
+        {/* Logo + greeting */}
+        <div style={{flexShrink:0, minWidth:0}}>
+          {!isMobile && <div style={{fontSize:9,color:T.muted,letterSpacing:3,textTransform:"uppercase",marginBottom:1}}>{greet()}, {demoMode?"Demo":user?.displayName?.split(" ")[0]||"You"}</div>}
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <div style={{width:28,height:28,borderRadius:8,background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>✦</div>
-            <h1 style={{fontSize:17,fontWeight:700,margin:0,letterSpacing:-0.5,color:T.text}}>{APP_NAME}</h1>
-            {tab==="habits"&&<div style={{fontSize:10,color:todayPct===100?"#4CAF82":"#9B8FE8",fontWeight:700,background:todayPct===100?"rgba(76,175,130,0.12)":"rgba(155,143,232,0.12)",padding:"3px 8px",borderRadius:6}}>{todayPct}% today</div>}
+            <h1 style={{fontSize: isMobile ? 15 : 17,fontWeight:700,margin:0,letterSpacing:-0.5,color:T.text,whiteSpace:"nowrap"}}>{APP_NAME}</h1>
+            {tab==="habits"&&<div style={{fontSize:10,color:todayPct===100?"#4CAF82":"#9B8FE8",fontWeight:700,background:todayPct===100?"rgba(76,175,130,0.12)":"rgba(155,143,232,0.12)",padding:"3px 8px",borderRadius:6}}>{todayPct}%</div>}
           </div>
         </div>
-        <Nav tab={tab} setTab={setTab} user={user}/>
-        <div style={{display:"flex",gap:7,alignItems:"center",flexShrink:0}}>
-          <button onClick={()=>setShowWrapped(true)} style={{background:"rgba(200,169,110,0.12)",border:"1px solid rgba(200,169,110,0.3)",borderRadius:10,padding:"8px 13px",color:"#C8A96E",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>🎁 Wrapped</button>
-          <button onClick={()=>setShowAI(true)} style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.28)",borderRadius:10,padding:"8px 13px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>✦ AI Coach</button>
-          {tab==="goals"&&<button onClick={()=>{setEditGoal(null);setShowModal(true);}} style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding:"8px 16px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit",boxShadow:"0 4px 16px rgba(155,143,232,0.25)"}}>+ Goal</button>}
+
+        {/* Desktop nav — hidden on mobile (Nav renders bottom bar instead) */}
+        {!isMobile && <Nav tab={tab} setTab={setTab} user={user}/>}
+
+        {/* Action buttons */}
+        <div style={{display:"flex",gap: isMobile ? 5 : 7,alignItems:"center",flexShrink:0}}>
+          {/* Wrapped — icon only on mobile */}
+          <button onClick={()=>setShowWrapped(true)} title="Weekly Wrapped"
+            style={{background:"rgba(200,169,110,0.12)",border:"1px solid rgba(200,169,110,0.3)",borderRadius:10,padding: isMobile ? "8px 10px" : "8px 13px",color:"#C8A96E",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>
+            {isMobile ? "🎁" : "🎁 Wrapped"}
+          </button>
+          {/* AI Coach — icon only on mobile */}
+          <button onClick={()=>setShowAI(true)} title="AI Coach"
+            style={{background:"rgba(155,143,232,0.1)",border:"1px solid rgba(155,143,232,0.28)",borderRadius:10,padding: isMobile ? "8px 10px" : "8px 13px",color:"#9B8FE8",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit"}}>
+            {isMobile ? "✦" : "✦ AI Coach"}
+          </button>
+          {/* Add Goal — compact on mobile */}
+          {tab==="goals" && <button onClick={()=>{setEditGoal(null);setShowModal(true);}}
+            style={{background:"linear-gradient(135deg,#9B8FE8,#7EB8D4)",border:"none",borderRadius:10,padding: isMobile ? "8px 12px" : "8px 16px",color:"#fff",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"inherit",boxShadow:"0 4px 16px rgba(155,143,232,0.25)"}}>
+            {isMobile ? "+" : "+ Goal"}
+          </button>}
           {demoMode
-            ? <button onClick={()=>{setDemoMode(false);setGoals([]);setHabits([]);setHabitLogs({});}} style={{background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:10,padding:"8px 12px",color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>Sign in →</button>
+            ? <button onClick={()=>{setDemoMode(false);setGoals([]);setHabits([]);setHabitLogs({});}}
+                style={{background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:10,padding:"8px 12px",color:T.muted,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"inherit"}}>
+                {isMobile ? "Login" : "Sign in →"}
+              </button>
             : <div style={{display:"flex",gap:7,alignItems:"center"}}>
                 {user?.photoURL && <img src={user.photoURL} alt="" style={{width:28,height:28,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.15)",flexShrink:0}}/>}
-                <button onClick={()=>setTab("settings")} style={{background:"rgba(255,255,255,0.06)",border:`1px solid ${T.border}`,borderRadius:9,padding:"7px 11px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙</button>
+                <button onClick={()=>setTab("settings")} style={{background:T.inputBg,border:`1px solid ${T.border}`,borderRadius:9,padding:"7px 11px",color:T.muted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙</button>
               </div>
           }
         </div>
       </div>
 
+      {/* Mobile nav renders itself as bottom bar — needs to be in tree */}
+      {isMobile && <Nav tab={tab} setTab={setTab} user={user}/>}
+
       {/* ── Pages ── */}
-      <div style={{maxWidth:920,margin:"0 auto",padding:"22px 18px"}}>
+      <div style={{maxWidth:920,margin:"0 auto",padding: isMobile ? "14px 12px 80px" : "22px 18px"}}>
         {tab==="goals"     && <GoalsPage goals={goals} setGoals={setGoals} saveGoal={saveGoal} deleteGoal={deleteGoal} toggleSubtask={toggleSubtask} addJournalNote={addJournalNote} setShowAI={setShowAI} setShowModal={setShowModal} setEditGoal={setEditGoal} onImportDemoGoals={!demoMode?()=>SEED_GOALS.forEach(g=>saveGoal({...g,id:"import_"+g.id})):null} diary={diary} user={user}/>}
         {tab==="habits"    && <HabitsPage habits={habits} saveHabit={saveHabit} deleteHabit={deleteHabit} habitLogs={habitLogs} toggleHabitLog={toggleHabitLog} addHabits={addHabits}/>}
         {tab==="reminders" && <RemindersPage reminders={reminders} saveReminder={saveReminder} deleteReminder={deleteReminder} toggleReminder={toggleReminder}/>}

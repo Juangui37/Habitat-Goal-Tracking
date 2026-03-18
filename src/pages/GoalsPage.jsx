@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "../firebase.js";
 import { doc, setDoc, deleteDoc, collection, getDoc } from "firebase/firestore";
 import { T } from "../constants/theme.js";
+import { useIsMobile } from "../utils/mobile.js";
 import { CATS, HAB_CATS, PRESET_HABITS, DAY_SCHEDULES, DAY_LABELS, todayStr, calcProgress, daysLeft, ADMIN_UID } from "../constants/index.js";
 import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
@@ -11,6 +12,7 @@ import { CustomCategoryModal, useAllCats } from "../components/modals/CustomCate
 import { JournalSuggestionBanner } from "../components/JournalSuggestionBanner.jsx";
 
 function GoalCard({ goal, onToggleSubtask, onDelete, onEdit, onAddNote }) {       
+  const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState(false);        
   const [showJournal, setShowJournal] = useState(false);        
   const cat = CATS.find(c=>c.id===goal.category)||CATS[0];        
@@ -87,7 +89,7 @@ function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJo
   const highActive=goals.filter(g=>g.priority==="High"&&calcProgress(g)<100).length;        
   return (        
     <div>       
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:20}}>       
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:11,marginBottom:20}}>        
         {[{l:"Total Goals",v:total,s:"across all areas",c:"#9B8FE8"},{l:"Completed",v:completed,s:"all subtasks done",c:"#4CAF82"},{l:"Progress",v:`${overall}%`,s:"average completion",c:"#7EB8D4"},{l:"High Priority",v:highActive,s:"still in progress",c:"#E8645A"}].map(x=>(       
           <div key={x.l} style={{background:T.card,borderRadius:13,padding:"15px 17px",border:`1px solid ${T.border}`}}>        
             <div style={{fontSize:9,color:T.muted,letterSpacing:2,textTransform:"uppercase",marginBottom:5}}>{x.l}</div>        
@@ -96,7 +98,7 @@ function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJo
           </div>        
         ))}       
       </div>        
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:9,marginBottom:20}}>        
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:9,marginBottom:20}}>       
         {CATS.map(c=>{const cg=goals.filter(g=>g.category===c.id);if(!cg.length)return null;const avg=Math.round(cg.reduce((a,g)=>a+calcProgress(g),0)/cg.length);return(       
           <div key={c.id} onClick={()=>setActiveCat(ac=>ac===c.id?"all":c.id)} style={{background:activeCat===c.id?`${c.color}12`:T.card,border:`1px solid ${activeCat===c.id?c.color+"55":T.border}`,borderRadius:11,padding:"12px 13px",cursor:"pointer",transition:"all 0.2s"}}>       
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:14}}>{c.icon}</span><span style={{fontSize:11,fontWeight:700,color:c.color}}>{avg}%</span></div>       

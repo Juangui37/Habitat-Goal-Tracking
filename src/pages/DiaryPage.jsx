@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "../firebase.js";
 import { doc, setDoc, deleteDoc, collection, getDoc } from "firebase/firestore";
 import { T } from "../constants/theme.js";
+import { useIsMobile } from "../utils/mobile.js";
 import { CATS, HAB_CATS, PRESET_HABITS, DAY_SCHEDULES, DAY_LABELS, todayStr, calcProgress, daysLeft, ADMIN_UID, fmtDate } from "../constants/index.js";
 import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
 import { JournalPanel } from "../components/JournalPanel.jsx";
 
 function DiaryPage({ entries, saveEntry, deleteEntry, diaryPin }) {
+  const isMobile = useIsMobile();
   const [locked, setLocked] = useState(!!diaryPin);
   const [pinAttempt, setPinAttempt] = useState("");
   const [pinError, setPinError] = useState("");
@@ -112,7 +114,7 @@ Respond ONLY with JSON: {"indices": [0, 3, 5], "explanation": "Found X entries a
   return (
     <div>
       {/* Stats row */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:20}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:11,marginBottom:20}}>
         {[
           {l:"Entries",v:entries.length,c:"#9B8FE8"},
           {l:"Total Words",v:entries.reduce((a,e)=>a+(e.wordCount||0),0).toLocaleString(),c:"#7EB8D4"},
@@ -140,7 +142,7 @@ Respond ONLY with JSON: {"indices": [0, 3, 5], "explanation": "Found X entries a
 
       {/* AI Search bar */}
       {viewMode==="search" && (
-        <div style={{background:T.card,borderRadius:14,padding:"18px 20px",marginBottom:16,border:`1px solid ${T.border}`}}>
+        <div style={{background:T.card,borderRadius:14,padding:isMobile?"14px 14px":"18px 20px",marginBottom:16,border:`1px solid ${T.border}`}}>
           <div style={{fontSize:11,color:"#9B8FE8",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:10}}>✦ AI Journal Search</div>
           <p style={{fontSize:12,color:T.muted,marginBottom:12,lineHeight:1.5}}>Ask in plain language — "entries about my ex", "times I felt proud", "money stress", "moments with my kids"</p>
           <div style={{display:"flex",gap:8}}>

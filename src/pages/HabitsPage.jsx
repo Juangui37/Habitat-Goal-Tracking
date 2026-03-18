@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "../firebase.js";
 import { doc, setDoc, deleteDoc, collection, getDoc } from "firebase/firestore";
 import { T } from "../constants/theme.js";
+import { useIsMobile } from "../utils/mobile.js";
 import { CATS, HAB_CATS, PRESET_HABITS, DAY_SCHEDULES, DAY_LABELS, todayStr, calcProgress, daysLeft, ADMIN_UID } from "../constants/index.js";
 import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
@@ -13,6 +14,7 @@ function HabitsPage({ habits, saveHabit, deleteHabit, habitLogs, toggleHabitLog,
   const today = todayStr();
   const todayDow = new Date().getDay(); // 0=Sun...6=Sat
   const todayLog = habitLogs[today] || {};
+  const isMobile = useIsMobile();
   const [activeCat, setActiveCat] = useState("all");
   const [showAddHabit, setShowAddHabit] = useState(false);
   const [showPresets, setShowPresets] = useState(false);

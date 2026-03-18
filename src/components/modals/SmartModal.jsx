@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { T } from "../../constants/theme.js";
+import { useIsMobile } from "../../utils/mobile.js";
 import { CATS, todayStr } from "../../constants/index.js";
 import { CustomCategoryModal, useAllCats } from "./CustomCategoryModal.jsx";
 
 function SmartModal({ onSave, onClose, editGoal }) {
   const { all: CATS, refresh: refreshCats } = useAllCats();
+  const isMobile = useIsMobile();
   const [showCustomCatModal, setShowCustomCatModal] = useState(false);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(editGoal||{title:"",category:"physical",specific:"",measurable:"",achievable:"",relevant:"",timebound:"",priority:"Medium",subtasks:[],journal:[]});

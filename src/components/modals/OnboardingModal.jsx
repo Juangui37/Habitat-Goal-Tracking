@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { db } from "../../firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import { T } from "../../constants/theme.js";
+import { useIsMobile } from "../../utils/mobile.js";
 import { CATS, todayStr } from "../../constants/index.js";
 import { callClaude } from "../../utils/ai.js";
 
 function OnboardingModal({ user, onComplete, onSaveGoal, onSaveHabits }) {
+  const isMobile = useIsMobile();
   const [step, setStep] = useState(0);
   const [goalInput, setGoalInput] = useState("");
   const [generatedGoal, setGeneratedGoal] = useState(null);

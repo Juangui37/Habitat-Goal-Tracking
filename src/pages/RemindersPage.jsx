@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { db } from "../firebase.js";
 import { doc, setDoc, deleteDoc, collection, getDoc } from "firebase/firestore";
 import { T } from "../constants/theme.js";
+import { useIsMobile } from "../utils/mobile.js";
 import { CATS, HAB_CATS, PRESET_HABITS, DAY_SCHEDULES, DAY_LABELS, todayStr, calcProgress, daysLeft, ADMIN_UID, fmtDate } from "../constants/index.js";
 import { callClaude, useLoadingMessage } from "../utils/ai.js";
 import { Ring } from "../components/Ring.jsx";
 import { JournalPanel } from "../components/JournalPanel.jsx";
 
 function RemindersPage({ reminders, saveReminder, deleteReminder, toggleReminder }) {
+  const isMobile = useIsMobile();
   const [showAdd, setShowAdd] = useState(false);
   const [newText, setNewText] = useState("");
   const [newDue, setNewDue] = useState("");
@@ -69,7 +71,7 @@ Respond ONLY with JSON: {"category": "...", "note": "..."}`,
   return (
     <div>
       {/* Header stats */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:11,marginBottom:20}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(3,1fr)",gap:11,marginBottom:20}}>
         {[
           {l:"Pending",v:pending,c:"#9B8FE8"},
           {l:"Overdue",v:overdueCount,c:"#E8645A"},

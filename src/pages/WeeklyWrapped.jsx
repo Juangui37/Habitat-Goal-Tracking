@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase.js";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { T } from "../constants/theme.js";
+import { useIsMobile } from "../utils/mobile.js";
 import { todayStr, calcProgress, ADMIN_UID, fmtDate } from "../constants/index.js";
 import { callClaude, useLoadingMessage } from "../utils/ai.js";
 
@@ -35,6 +36,7 @@ function parseSections(text) {
 }
 
 function WeeklyWrapped({ habits, habitLogs, goals, reminders, diary, onClose, user }) {
+  const isMobile = useIsMobile();
   const [loading, setLoading]             = useState(false);
   const [summary, setSummary]             = useState(null);
   const [nextAvailable, setNextAvailable] = useState(null);

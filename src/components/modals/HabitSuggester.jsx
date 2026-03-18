@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { T } from "../../constants/theme.js";
+import { useIsMobile } from "../../utils/mobile.js";
 import { CATS, HAB_CATS, todayStr } from "../../constants/index.js";
 import { callClaude, useLoadingMessage } from "../../utils/ai.js";
 
 function HabitSuggester({ goal, existingHabits, onAdd, onClose }) {       
+  const isMobile = useIsMobile();
   const [suggestions, setSuggestions] = useState([]);       
   const [selected, setSelected] = useState({});       
   const [loading, setLoading] = useState(true);       

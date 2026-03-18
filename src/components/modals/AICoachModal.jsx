@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { T } from "../../constants/theme.js";
+import { useIsMobile } from "../../utils/mobile.js";
 import { CATS, todayStr } from "../../constants/index.js";
 import { callClaude } from "../../utils/ai.js";
 
@@ -17,6 +18,7 @@ function AICoachModal({ onClose, onGoalGenerated }) {
   const T2 = { border:"rgba(255,255,255,0.07)", muted:"rgba(255,255,255,0.38)" };
 
   // ── Mode: "chat" (one goal at a time) or "bulk" (paste text → many goals) ──
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState("chat");
 
   // ── Chat mode state ──
