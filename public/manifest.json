@@ -1,25 +1,25 @@
 {
-  "name": "Lumina — Life Dashboard",
-  "short_name": "Lumina",
-  "description": "AI-powered life goal tracking — goals, habits, journal, analytics.",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#07080C",
-  "theme_color": "#9B8FE8",
-  "orientation": "portrait-primary",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "categories": ["health", "lifestyle", "productivity"]
+  "name": "Lumina - Life Dashboard",
+  "short_name": "Lumina",
+  "description": "AI-powered life goal tracking - goals, habits, journal, analytics.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07080C",
+  "theme_color": "#9B8FE8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle", "productivity"]
 }
