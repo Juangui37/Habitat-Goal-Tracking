@@ -80,7 +80,8 @@ function GoalCard({ goal, onToggleSubtask, onDelete, onEdit, onAddNote }) {   �
 
 
 function GoalsPage({ goals, setGoals, saveGoal, deleteGoal, toggleSubtask, addJournalNote, setShowAI, setShowModal, setEditGoal, onImportDemoGoals, diary = [], user = null, onCreateGoalPrefilled }) {       
-  const [activeCat, setActiveCat] = useState("all");        
+  const isMobile = useIsMobile();
+  const [activeCat, setActiveCat] = useState("all");        
   const [activePri, setActivePri] = useState("all");        
   const [search, setSearch] = useState("");       
   const filtered = goals.filter(g => (activeCat==="all"||g.category===activeCat)&&(activePri==="all"||g.priority===activePri)&&g.title.toLowerCase().includes(search.toLowerCase()));       

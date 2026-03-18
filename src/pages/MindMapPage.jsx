@@ -9,12 +9,12 @@ import { JournalPanel } from "../components/JournalPanel.jsx";
 import { useIsMobile } from "../utils/mobile.js";
 
 function MindMapPage({ user, goals, habits, habitLogs, diary, reminders, profilePhoto }) {
-  const [mapData, setMapData] = useState(null);
+  const isMobile = useIsMobile();
+  const [mapData, setMapData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeNode, setActiveNode] = useState(null);
   const loadMsg = useLoadingMessage(loading);
-  const isMobile = useIsMobile();
 
   const CATS_MM = [
     { id:"physical",  label:"Physical",  icon:"⚡", color:"#E8645A" },
